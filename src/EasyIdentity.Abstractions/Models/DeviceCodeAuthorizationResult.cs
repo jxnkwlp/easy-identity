@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Models
 {
-    public interface IAuthorizationControllService
+    public class DeviceCodeAuthorizationResult
     {
-
+        public bool Successed { get; set; }
     }
 }

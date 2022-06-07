@@ -37,8 +37,8 @@ namespace EasyIdentity.Services
 
             var data = new Dictionary<string, string>();
 
-            if (request.Method == HttpMethods.Post)
-            { 
+            if (request.Method == HttpMethods.Post && request.HasFormContentType)
+            {
                 var formData = await request.ReadFormAsync();
 
                 foreach (var item in formData)

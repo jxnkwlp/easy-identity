@@ -14,6 +14,14 @@ namespace EasyIdentity.Endpoints
 
         private readonly IRequestParamReader _paramReader;
         private readonly IDeviceCodeRequestValidator _deviceCodeRequestValidator;
+        private readonly IDeviceCodeService _deviceCodeService; 
+
+        public DeviceCodeEndpointHandler(IRequestParamReader paramReader, IDeviceCodeRequestValidator deviceCodeRequestValidator, IDeviceCodeService deviceCodeService)
+        {
+            _paramReader = paramReader;
+            _deviceCodeRequestValidator = deviceCodeRequestValidator;
+            _deviceCodeService = deviceCodeService;
+        }
 
         public async Task HandleAsync(HttpContext context)
         {
@@ -21,19 +29,11 @@ namespace EasyIdentity.Endpoints
 
             var validationResult = await _deviceCodeRequestValidator.ValidateAsync(requestData);
 
-            // TODO 
-
-            var data = new
-            {
-                device_code = Guid.NewGuid(),
-                user_code = Guid.NewGuid(),
-                verification_uri = "https://example.okta.com/device",
-                interval = 5,
-                expires_in = 1800,
-            };
+            var codeRequestResult = await _deviceCodeService.CodeRequestAsync(requestData, validationResult);
 
             var jsonSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web) { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull };
-            await context.Response.WriteAsJsonAsync(data, jsonSerializerOptions);
+
+            await context.Response.WriteAsJsonAsync(codeRequestResult, jsonSerializerOptions); 
         }
     }
 }

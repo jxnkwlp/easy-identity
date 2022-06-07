@@ -15,7 +15,7 @@ namespace EasyIdentity.Extensions
 
             services.AddSingleton((_) => builder);
             services.AddOptions<EasyIdentityOptions>();
-            
+
             services.AddEasyIdentityEndpointHandler<DiscoveryEndpointHandler>();
             services.AddEasyIdentityEndpointHandler<JwksEndpointHandler>();
             services.AddEasyIdentityEndpointHandler<AuthorizationEndpointHandler>();
@@ -41,8 +41,15 @@ namespace EasyIdentity.Extensions
             services.AddTransient<IAuthorizationCodeCreationService, AuthorizationCodeCreationService>();
             services.AddTransient<IAuthorizationCodeStoreService, AuthorizationCodeStoreService>();
 
+            services.AddTransient<IDeviceCodeService, DeviceCodeService>();
+            services.AddTransient<IDeviceCodeRequestValidator, DeviceCodeRequestValidator>();
+            services.AddTransient<IDeviceCodeCodeCreationService, DeviceCodeCodeCreationService>();
+            services.AddTransient<IDeviceCodeStoreService, DeviceCodeStoreService>();
+
             services.AddTransient<ITokenResponseWriter, TokenResponseWriter>();
             services.AddTransient<ITokenCreationService, JwtTokenGeneratorService>();
+
+            services.AddTransient<IAuthorizationInteractionService, AuthorizationInteractionService>();
 
             services.AddTransient<IJsonSerializer, DefaultJsonSerializer>();
 
