@@ -10,64 +10,57 @@ namespace EasyIdentity.Endpoints
 {
     public class TokenEndpointHandler : IEndpointHandler
     {
-        public string Path => ProtocolRoutePaths.Token;
+        public string Path => EndpointProtocolRoutePaths.Token;
 
         public string[] Methods => new string[1] { HttpMethods.Post };
 
-        private readonly IRequestParamReader _parser;
+        private readonly IRequestParamReader _requestParamReader;
         private readonly IEnumerable<IGrantTypeHandler> _grantTypeHandlers;
         private readonly ITokenRequestValidator _tokenRequestValidator;
-        private readonly ITokenResponseWriter _tokenResponseWriter;
+        private readonly IResponseWriter _responseWriter;
 
-        public TokenEndpointHandler(IRequestParamReader parser, IEnumerable<IGrantTypeHandler> grantTypeHandlers, ITokenRequestValidator tokenRequestValidator, ITokenResponseWriter tokenResponseWriter)
+        public TokenEndpointHandler(IRequestParamReader requestParamReader, IEnumerable<IGrantTypeHandler> grantTypeHandlers, ITokenRequestValidator tokenRequestValidator, IResponseWriter responseWriter)
         {
-            _parser = parser;
+            _requestParamReader = requestParamReader;
             _grantTypeHandlers = grantTypeHandlers;
             _tokenRequestValidator = tokenRequestValidator;
-            _tokenResponseWriter = tokenResponseWriter;
+            _responseWriter = responseWriter;
         }
 
         public async Task HandleAsync(HttpContext context)
         {
-            var requestData = await _parser.ReadAsync();
-            var grantType = requestData["grant_type"];
-            var validatedResult = await _tokenRequestValidator.ValidateAsync(grantType, requestData);
+            var requestData = await _requestParamReader.ReadAsync();
 
-            if (!validatedResult.Succeeded)
+            var grantType = requestData.GrantType;
+
+            var validationResult = await _tokenRequestValidator.ValidateAsync(grantType, requestData);
+
+            if (!validationResult.Succeeded)
             {
-                context.Response.StatusCode = 400;
-                await context.Response.WriteAsJsonAsync(new { error = validatedResult.Error, error_description = validatedResult.ErrorDescription });
+                await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, validationResult.Error, validationResult.ErrorDescription));
                 return;
             }
 
-            var handleContext = new GrantTypeHandleRequest(validatedResult.Client, null, requestData.Data);
+            var grantTypeHandleRequest = new GrantTypeHandleRequest(null, validationResult.Client, null, requestData);
 
-            var handle = _grantTypeHandlers.FirstOrDefault(x => x.GrantType == validatedResult.GrantType);
+            var grantTypeHandler = _grantTypeHandlers.FirstOrDefault(x => x.GrantType == validationResult.GrantType);
 
-            if (handle == null)
-                throw new Exception($"The grant type '{validatedResult.GrantType}' is not supported");
+            if (grantTypeHandler == null)
+                throw new Exception($"The grant type '{validationResult.GrantType}' is not supported");
 
-            // handle the token 
-            var result = await handle.HandleAsync(handleContext);
+            var result = await grantTypeHandler.HandleAsync(grantTypeHandleRequest);
 
-            if (result.HasError == false)
+            if (result.Succeeded)
             {
-                if (!string.IsNullOrEmpty(result.ResponseLocation))
-                {
-                    context.Response.Redirect(result.ResponseLocation);
-                    return;
-                }
+                if (!string.IsNullOrEmpty(result.HttpLocation))
+                    await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, result.HttpLocation));
                 else
-                {
-                    context.Response.StatusCode = 200;
-                }
+                    await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, result.Token.ToDictionary()));
             }
             else
             {
-                context.Response.StatusCode = 400;
+                await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, result.Failure));
             }
-
-            await _tokenResponseWriter.WriteAsync(context, result);
         }
     }
 }

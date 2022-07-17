@@ -7,7 +7,7 @@ using EasyIdentity.Stores;
 
 namespace EasyIdentity.Services
 {
-    public class ImplicitTokenRequestValidator : IGrantTypeITokenRequestValidator
+    public class ImplicitTokenRequestValidator : IGrantTypeTokenRequestValidator
     {
         public string GrantType => GrantTypesConsts.AuthorizationCode;
 
@@ -38,7 +38,7 @@ namespace EasyIdentity.Services
             var clientSecret = requestData["client_secret"];
             var scope = requestData["scope"];
             var authorization = requestData["authorization"];
-            var code = requestData["code"]; 
+            var code = requestData["code"];
             var redirectUri = requestData["redirect_uri"];
 
             if (!string.IsNullOrEmpty(authorization))

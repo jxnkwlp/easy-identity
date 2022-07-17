@@ -50,9 +50,9 @@ public class EasyIdentityOptionsBuilder
         return this;
     }
 
-    public EasyIdentityOptionsBuilder AddUserProfileService<TProfileService>() where TProfileService : class, IUserProfileService
+    public EasyIdentityOptionsBuilder AddUserProfileService<TProfileService>() where TProfileService : class, IUserService
     {
-        _services.AddScoped<IUserProfileService, TProfileService>();
+        _services.AddScoped<IUserService, TProfileService>();
         return this;
     }
 

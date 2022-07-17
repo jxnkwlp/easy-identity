@@ -5,9 +5,9 @@ namespace EasyIdentity.Services
 {
     public interface IDeviceCodeCodeCreationService
     {
-        Task<string> CreateCodeAsync(Client client);
-        Task<string> CreateUserCodeAsync(Client client);
+        Task<string> CreateDeviceCodeAsync(Client client);
 
+        Task<string> CreateUserCodeAsync(Client client);
 
     }
 }

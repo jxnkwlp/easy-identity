@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using EasyIdentity.Models;
 
@@ -9,68 +8,37 @@ namespace EasyIdentity.Services
     {
         public string GrantType => GrantTypesConsts.Implicit;
 
-        private readonly ITokenCreationService _tokenGeneratorService;
-        private readonly IUserProfileService _userProfileService;
+        private readonly IUserService _userService;
+        private readonly ITokenManager _tokenManager;
 
-        public ImplicitGrantTypeHandler(ITokenCreationService tokenGeneratorService, IUserProfileService userProfileService)
+        public ImplicitGrantTypeHandler(IUserService userService, ITokenManager tokenManager)
         {
-            _tokenGeneratorService = tokenGeneratorService;
-            _userProfileService = userProfileService;
+            _userService = userService;
+            _tokenManager = tokenManager;
         }
 
-        public async Task<GrantTypeHandleResult> HandleAsync(GrantTypeHandleRequest request)
+        public async Task<GrantTypeHandledResult> HandleAsync(GrantTypeHandleRequest request)
         {
             var client = request.Client;
+            var subject = request.Subject;
 
-            var result = new GrantTypeHandleResult();
+            var userProfile = await _userService.GetProfileAsync(new UserProfileRequest(client, subject, request.Data));
 
-            var userProfile = await _userProfileService.GetAsync(new UserProfileRequest(request.RawData, client, null));
-
-            if (userProfile.Succeeded == false)
+            if (userProfile.Locked)
             {
-                result.SetError(userProfile.Error, userProfile.ErrorDescription);
-                return result;
+                return GrantTypeHandledResult.Fail(new Exception("access_denied"));
             }
 
-            // TODO 
-            var tokenDescriptor = new TokenDescriptor(userProfile.SubjectId, client)
-            {
-                TokenType = "JWT",
-                CreationTime = DateTime.UtcNow,
-                Lifetime = 300,
-                Identity = new System.Security.Claims.ClaimsIdentity(userProfile.Identity.Claims, ".easyidentity", "sub", "roles"),
-            };
+            var token = await _tokenManager.CreateAsync(subject, client, userProfile.Principal);
 
-            if (tokenDescriptor.Identity.HasClaim(x => x.Type == "sub"))
+            return GrantTypeHandledResult.Success(new TokenData
             {
-                tokenDescriptor.Identity.TryRemoveClaim(tokenDescriptor.Identity.FindFirst(x => x.Type == "sub"));
-            }
-            tokenDescriptor.Identity.AddClaim(new System.Security.Claims.Claim("sub", userProfile.SubjectId));
-
-            var accessToken = await _tokenGeneratorService.CreateTokenAsync(tokenDescriptor);
-
-            // id token
-            if (client.Scopes.Contains(StandardScopes.OpenId))
-            {
-                // TODO 
-            }
-
-            string refreshToken = null;
-            if (client.Scopes.Contains(StandardScopes.OfflineAccess))
-            {
-                refreshToken = await _tokenGeneratorService.CreateRefreshTokenAsync(tokenDescriptor);
-            }
-
-            result.ResponseData = new TokenResponseData
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
+                AccessToken = token.AccessToken,
+                RefreshToken = token.RefreshToken,
                 Scope = string.Join(" ", client.Scopes),
-                ExpiresIn = tokenDescriptor.Lifetime,
-                TokenType = "Bearer",
-            };
-
-            return result;
+                ExpiresIn = (int)token.TokenDescriptor.Lifetime.TotalSeconds,
+                TokenType = token.TokenDescriptor.TokenType,
+            });
         }
     }
 }

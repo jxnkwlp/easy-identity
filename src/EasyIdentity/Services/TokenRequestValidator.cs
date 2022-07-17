@@ -8,9 +8,9 @@ namespace EasyIdentity.Services
 {
     public class TokenRequestValidator : ITokenRequestValidator
     {
-        private readonly IEnumerable<IGrantTypeITokenRequestValidator> _validators;
+        private readonly IEnumerable<IGrantTypeTokenRequestValidator> _validators;
 
-        public TokenRequestValidator(IEnumerable<IGrantTypeITokenRequestValidator> validators)
+        public TokenRequestValidator(IEnumerable<IGrantTypeTokenRequestValidator> validators)
         {
             _validators = validators;
         }

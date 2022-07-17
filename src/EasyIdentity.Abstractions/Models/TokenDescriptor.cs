@@ -8,29 +8,24 @@ namespace EasyIdentity.Models
     /// </summary>
     public class TokenDescriptor
     {
-        public TokenDescriptor(string subjectId, Client client)
+        public TokenDescriptor(string subject, Client client, ClaimsPrincipal principal)
         {
-            SubjectId = subjectId;
+            Subject = subject;
             Client = client;
+            Principal = principal;
+            Guid = Guid.NewGuid();
         }
 
-        public string SubjectId { get; }
+        public Guid Guid { get; }
+        public string Subject { get; }
+        public Client Client { get; }
+        public ClaimsPrincipal Principal { get; }
 
         public string TokenType { get; set; }
-
-        public string TokenName { get; set; } = "AccessToken";
-
+        public string TokenName { get; set; }
         public string Issuer { get; set; }
-
         public string Audiences { get; set; }
-
+        public TimeSpan Lifetime { get; set; }
         public DateTime CreationTime { get; set; }
-
-        public int Lifetime { get; set; }
-
-        public Client Client { get; }
-
-        public ClaimsIdentity Identity { get; set; }
-
     }
 }

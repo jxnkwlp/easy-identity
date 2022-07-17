@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using EasyIdentity.Extensions;
 
 namespace EasyIdentity.Services
 {
@@ -29,9 +30,9 @@ namespace EasyIdentity.Services
             return Task.CompletedTask;
         }
 
-        public Task SaveAsync(ClaimsPrincipal principal, string code, DateTime expiration)
+        public Task CreateAsync(ClaimsPrincipal principal, string code, DateTime expiration)
         {
-            var subject = principal.Identity.Name;
+            var subject = principal.GetSubject();
 
             _cache[code] = new AuthorizationCode { Subject = subject, Expiration = expiration };
 
@@ -41,6 +42,7 @@ namespace EasyIdentity.Services
         public class AuthorizationCode
         {
             public string Subject { get; set; }
+
             public DateTime Expiration { get; set; }
         }
     }

@@ -4,33 +4,24 @@ namespace EasyIdentity.Models
 {
     public class UserProfileResult
     {
-        public string SubjectId { get; set; }
+        public string Subject { get; protected set; }
 
-        public ClaimsIdentity Identity { get; set; }
+        public ClaimsPrincipal Principal { get; protected set; }
 
+        public bool Locked { get; protected set; }
 
-        public bool Succeeded { get; protected set; }
-        public string Error { get; protected set; }
-        public string ErrorDescription { get; protected set; }
-
-        public static UserProfileResult Success(string subjectId, ClaimsIdentity identity)
+        protected UserProfileResult()
         {
-            return new UserProfileResult
-            {
-                SubjectId = subjectId,
-                Identity = identity,
-                Succeeded = true,
-            };
         }
 
-        public static UserProfileResult Fail(string error, string errorDescription = null)
+        public static UserProfileResult UserLocked()
         {
-            return new UserProfileResult
-            {
-                Succeeded = false,
-                Error = error,
-                ErrorDescription = errorDescription,
-            };
+            return new UserProfileResult { Locked = true };
+        }
+
+        public static UserProfileResult Success(string subject, ClaimsPrincipal principal)
+        {
+            return new UserProfileResult { Principal = principal, Subject = subject, };
         }
     }
 }

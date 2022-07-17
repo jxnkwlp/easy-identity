@@ -17,12 +17,12 @@ namespace EasyIdentity.Services
             throw new NotImplementedException();
         }
 
-        public Task SaveAsync(string deviceCode, string userCode, Client client, DateTime expiration)
+        public Task CreateAsync(DeviceCodeData data, Client client, DateTime expiration)
         {
             throw new NotImplementedException();
         }
 
-        public Task UpdateSubjectAsync(string deviceCode, ClaimsPrincipal principal)
+        public Task UpdateAsync(string deviceCode, ClaimsPrincipal principal)
         {
             throw new NotImplementedException();
         }

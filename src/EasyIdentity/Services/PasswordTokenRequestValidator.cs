@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace EasyIdentity.Services
 {
-    public class PasswordTokenRequestValidator : IGrantTypeITokenRequestValidator
+    public class PasswordTokenRequestValidator : IGrantTypeTokenRequestValidator
     {
         public string GrantType => GrantTypesConsts.Password;
 

@@ -1,19 +1,18 @@
-﻿using System.Collections.Generic;
-
-namespace EasyIdentity.Models
+﻿namespace EasyIdentity.Models
 {
     public class GrantTypeHandleRequest
     {
-        public GrantTypeHandleRequest(Client client, Scope[] scopes, Dictionary<string, string> rawData)
+        public string Subject { get; }
+        public Client Client { get; }
+        public Scope[] Scopes { get; }
+        public RequestData Data { get; }
+
+        public GrantTypeHandleRequest(string subject, Client client, Scope[] scopes, RequestData requestData)
         {
+            Subject = subject;
             Client = client;
             Scopes = scopes;
-            RawData = rawData;
+            Data = requestData;
         }
-
-        public Client Client { get; protected set; }
-        public Scope[] Scopes { get; protected set; }
-        public Dictionary<string, string> RawData { get; protected set; }
-
     }
 }

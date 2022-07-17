@@ -1,5 +1,4 @@
-﻿using System;
-using EasyIdentity.Endpoints;
+﻿using EasyIdentity.Endpoints;
 using EasyIdentity.Services;
 using EasyIdentity.Stores;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,10 +7,11 @@ namespace EasyIdentity.Extensions
 {
     public static class ServicesCollectionExtensions
     {
-        public static EasyIdentityOptionsBuilder AddEasyIdentity(this IServiceCollection services, Action<EasyIdentityOptionsBuilder> configure = null)
+        public static EasyIdentityOptionsBuilder AddEasyIdentity(this IServiceCollection services)
         {
             var builder = new EasyIdentityOptionsBuilder(services, new EasyIdentityOptions());
 
+            services.AddHttpContextAccessor();
 
             services.AddSingleton((_) => builder);
             services.AddOptions<EasyIdentityOptions>();
@@ -26,34 +26,38 @@ namespace EasyIdentity.Extensions
 
             services.AddTransient<IRequestParamReader, RequestParamReader>();
             services.AddTransient<ITokenRequestValidator, TokenRequestValidator>();
+            services.AddTransient<IResponseWriter, ResponseWriter>();
 
-            services.AddTransient<IGrantTypeITokenRequestValidator, ClientCredentialsTokenRequestValidator>();
-            services.AddTransient<IGrantTypeITokenRequestValidator, PasswordTokenRequestValidator>();
-            services.AddTransient<IGrantTypeITokenRequestValidator, AuthorizationCodeTokenRequestValidator>();
-            services.AddTransient<IGrantTypeITokenRequestValidator, ImplicitTokenRequestValidator>();
+            services.AddTransient<IClientCredentialsIdentityCreationService, ClientCredentialsIdentityCreationService>();
+
+            services.AddTransient<IGrantTypeTokenRequestValidator, ClientCredentialsTokenRequestValidator>();
+            services.AddTransient<IGrantTypeTokenRequestValidator, PasswordTokenRequestValidator>();
+            services.AddTransient<IGrantTypeTokenRequestValidator, AuthorizationCodeTokenRequestValidator>();
+            services.AddTransient<IGrantTypeTokenRequestValidator, ImplicitTokenRequestValidator>();
 
             services.AddTransient<IGrantTypeHandler, ClientCredentialsGrantTypeHandler>();
             services.AddTransient<IGrantTypeHandler, PasswordGrantTypeHandler>();
             services.AddTransient<IGrantTypeHandler, AuthorizationCodeGrantTypeHandler>();
             services.AddTransient<IGrantTypeHandler, ImplicitGrantTypeHandler>();
 
+            services.AddTransient<IAuthorizationCodeManager, AuthorizationCodeManager>();
             services.AddTransient<IAuthorizationRequestValidator, AuthorizationRequestValidator>();
             services.AddTransient<IAuthorizationCodeCreationService, AuthorizationCodeCreationService>();
             services.AddTransient<IAuthorizationCodeStoreService, AuthorizationCodeStoreService>();
 
-            services.AddTransient<IDeviceCodeService, DeviceCodeService>();
+            services.AddTransient<IDeviceCodeManager, DeviceCodeService>();
             services.AddTransient<IDeviceCodeRequestValidator, DeviceCodeRequestValidator>();
             services.AddTransient<IDeviceCodeCodeCreationService, DeviceCodeCodeCreationService>();
             services.AddTransient<IDeviceCodeStoreService, DeviceCodeStoreService>();
 
-            services.AddTransient<ITokenResponseWriter, TokenResponseWriter>();
-            services.AddTransient<ITokenCreationService, JwtTokenGeneratorService>();
+            services.AddTransient<ITokenManager, TokenManager>();
+            services.AddTransient<ITokenCreationService, JwtTokenCreationService>();
 
             services.AddTransient<IAuthorizationInteractionService, AuthorizationInteractionService>();
 
             services.AddTransient<IJsonSerializer, DefaultJsonSerializer>();
 
-            configure?.Invoke(builder);
+            services.AddTransient<IRedirectUrlValidator, RedirectUrlValidator>();
 
             services.AddSingleton<EasyIdentityOptions>((_) => builder.Options);
 
@@ -65,9 +69,9 @@ namespace EasyIdentity.Extensions
             return services.AddTransient<IEndpointHandler, TEndpointHandler>();
         }
 
-        public static IServiceCollection AddEasyIdentityUserProfileService<TProfileService>(this IServiceCollection services) where TProfileService : class, IUserProfileService
+        public static IServiceCollection AddEasyIdentityUserProfileService<TProfileService>(this IServiceCollection services) where TProfileService : class, IUserService
         {
-            return services.AddScoped<IUserProfileService, TProfileService>();
+            return services.AddScoped<IUserService, TProfileService>();
         }
 
     }

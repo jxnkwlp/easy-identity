@@ -5,7 +5,7 @@ namespace EasyIdentity.Endpoints
 {
     public class DiscoveryEndpointHandler : IEndpointHandler
     {
-        public string Path => ProtocolRoutePaths.DiscoveryConfiguration;
+        public string Path => EndpointProtocolRoutePaths.DiscoveryConfiguration;
 
         public string[] Methods => new string[1] { HttpMethods.Get };
 

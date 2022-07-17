@@ -7,6 +7,6 @@ namespace EasyIdentity.Services
     {
         string GrantType { get; }
 
-        Task<GrantTypeHandleResult> HandleAsync(GrantTypeHandleRequest context);
+        Task<GrantTypeHandledResult> HandleAsync(GrantTypeHandleRequest request);
     }
 }

@@ -5,6 +5,6 @@ namespace EasyIdentity.Services
 {
     public interface ITokenRequestValidator
     {
-        Task<RequestValidationResult> ValidateAsync(string grantType, RequestData requestData);
+        Task<RequestValidationResult> ValidateAsync(string grantType, RequestData data);
     }
 }

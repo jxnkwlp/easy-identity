@@ -1,6 +1,5 @@
-﻿using System;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using EasyIdentity.Models;
 using EasyIdentity.Services;
 using Microsoft.AspNetCore.Http;
 
@@ -8,32 +7,38 @@ namespace EasyIdentity.Endpoints
 {
     public class DeviceCodeEndpointHandler : IEndpointHandler
     {
-        public string Path => ProtocolRoutePaths.DeviceCode;
+        public string Path => EndpointProtocolRoutePaths.DeviceCode;
 
         public string[] Methods => new string[] { HttpMethods.Post };
 
-        private readonly IRequestParamReader _paramReader;
+        private readonly IRequestParamReader _requestParamReader;
         private readonly IDeviceCodeRequestValidator _deviceCodeRequestValidator;
-        private readonly IDeviceCodeService _deviceCodeService; 
+        private readonly IDeviceCodeManager _deviceCodeManager;
+        private readonly IResponseWriter _responseWriter;
 
-        public DeviceCodeEndpointHandler(IRequestParamReader paramReader, IDeviceCodeRequestValidator deviceCodeRequestValidator, IDeviceCodeService deviceCodeService)
+        public DeviceCodeEndpointHandler(IRequestParamReader requestParamReader, IDeviceCodeRequestValidator deviceCodeRequestValidator, IDeviceCodeManager deviceCodeManager, IResponseWriter responseWriter)
         {
-            _paramReader = paramReader;
+            _requestParamReader = requestParamReader;
             _deviceCodeRequestValidator = deviceCodeRequestValidator;
-            _deviceCodeService = deviceCodeService;
+            _deviceCodeManager = deviceCodeManager;
+            _responseWriter = responseWriter;
         }
 
         public async Task HandleAsync(HttpContext context)
         {
-            var requestData = await _paramReader.ReadAsync();
+            var requestData = await _requestParamReader.ReadAsync();
 
             var validationResult = await _deviceCodeRequestValidator.ValidateAsync(requestData);
 
-            var codeRequestResult = await _deviceCodeService.CodeRequestAsync(requestData, validationResult);
+            if (!validationResult.Succeeded)
+            {
+                await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, validationResult.Error, validationResult.ErrorDescription));
+                return;
+            }
 
-            var jsonSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web) { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull };
+            var codeRequestResult = await _deviceCodeManager.RequestAsync(requestData, validationResult);
 
-            await context.Response.WriteAsJsonAsync(codeRequestResult, jsonSerializerOptions); 
+            await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, codeRequestResult.ToDictionary()));
         }
     }
 }

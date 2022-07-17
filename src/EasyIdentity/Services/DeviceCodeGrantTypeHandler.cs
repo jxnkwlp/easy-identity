@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using EasyIdentity.Models;
+using Microsoft.Extensions.Logging;
 
 namespace EasyIdentity.Services
 {
@@ -9,74 +9,65 @@ namespace EasyIdentity.Services
     {
         public string GrantType => GrantTypesConsts.DeviceCode;
 
-        private readonly IDeviceCodeStoreService _deviceCodeStoreService;
-        private readonly IUserProfileService _userProfileService;
-        private readonly ITokenCreationService _tokenGeneratorService;
+        private readonly ILogger<DeviceCodeGrantTypeHandler> _logger;
+        private readonly IUserService _userService;
+        private readonly ITokenManager _tokenManager;
+        private readonly IDeviceCodeManager _deviceCodeManager;
 
-        public async Task<GrantTypeHandleResult> HandleAsync(GrantTypeHandleRequest context)
+        public DeviceCodeGrantTypeHandler(ILogger<DeviceCodeGrantTypeHandler> logger, IUserService userService, ITokenManager tokenManager, IDeviceCodeManager deviceCodeManager)
         {
-            var client = context.Client;
+            _logger = logger;
+            _userService = userService;
+            _tokenManager = tokenManager;
+            _deviceCodeManager = deviceCodeManager;
+        }
 
-            var result = new GrantTypeHandleResult();
+        public async Task<GrantTypeHandledResult> HandleAsync(GrantTypeHandleRequest request)
+        {
+            var client = request.Client;
 
-            var deviceCode = context.RawData["device_code"];
-            var subject = await _deviceCodeStoreService.GetSubjectAsync(deviceCode);
+            var deviceCode = request.Data.DeviceCode;
+
+            // TODO: check request is too fast
+            // need return slow_down message
+
+            if (!await _deviceCodeManager.ValidateAsync(deviceCode))
+            {
+                _logger.LogDebug($"The device code '{deviceCode}' request validate result: false");
+                return GrantTypeHandledResult.Fail(new Exception("expired_token"));
+            }
+
+            var subject = await _deviceCodeManager.FindSubjectAsync(deviceCode);
 
             if (string.IsNullOrWhiteSpace(subject))
             {
-                result.SetError("Invalid code");
-                return result;
+                return GrantTypeHandledResult.Fail(new Exception("authorization_pending"));
             }
 
-            await _deviceCodeStoreService.RemoveAsync(deviceCode);
+            var authenticateResult = await _deviceCodeManager.AuthenticateAsync(deviceCode);
 
-            var userProfile = await _userProfileService.GetAsync(new UserProfileRequest(context.RawData, client, subject));
-
-            if (userProfile.Succeeded == false)
+            if (!authenticateResult.Granted)
             {
-                result.SetError(userProfile.Error, userProfile.ErrorDescription);
-                return result;
+                return GrantTypeHandledResult.Fail(new Exception("access_denied"));
             }
 
-            // TODO 
-            var tokenDescriptor = new TokenDescriptor(subject, client)
-            {
-                TokenType = "JWT",
-                CreationTime = DateTime.UtcNow,
-                Lifetime = 300,
-                Identity = new System.Security.Claims.ClaimsIdentity(userProfile.Identity.Claims, ".easyidentity", "sub", "roles"),
-            };
+            var userProfile = await _userService.GetProfileAsync(new UserProfileRequest(client, subject, request.Data));
 
-            if (tokenDescriptor.Identity.HasClaim(x => x.Type == "sub"))
+            if (userProfile.Locked)
             {
-                tokenDescriptor.Identity.TryRemoveClaim(tokenDescriptor.Identity.FindFirst(x => x.Type == "sub"));
-            }
-            tokenDescriptor.Identity.AddClaim(new System.Security.Claims.Claim("sub", userProfile.SubjectId));
-
-            var accessToken = await _tokenGeneratorService.CreateTokenAsync(tokenDescriptor);
-
-            // id token
-            if (client.Scopes.Contains(StandardScopes.OpenId))
-            {
-                // TODO 
+                return GrantTypeHandledResult.Fail(new Exception("access_denied"));
             }
 
-            string refreshToken = null;
-            if (client.Scopes.Contains(StandardScopes.OfflineAccess))
-            {
-                refreshToken = await _tokenGeneratorService.CreateRefreshTokenAsync(tokenDescriptor);
-            }
+            var token = await _tokenManager.CreateAsync(subject, client, userProfile.Principal);
 
-            result.ResponseData = new TokenResponseData
+            return GrantTypeHandledResult.Success(new TokenData
             {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
+                AccessToken = token.AccessToken,
+                RefreshToken = token.RefreshToken,
                 Scope = string.Join(" ", client.Scopes),
-                ExpiresIn = tokenDescriptor.Lifetime,
-                TokenType = "Bearer",
-            };
-
-            return result;
+                ExpiresIn = (int)token.TokenDescriptor.Lifetime.TotalSeconds,
+                TokenType = token.TokenDescriptor.TokenType,
+            });
         }
     }
 }

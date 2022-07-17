@@ -10,7 +10,7 @@ namespace EasyIdentity.Endpoints
 {
     public class JwksEndpointHandler : IEndpointHandler
     {
-        public string Path => ProtocolRoutePaths.DiscoveryWebKeys;
+        public string Path => EndpointProtocolRoutePaths.DiscoveryWebKeys;
 
         public string[] Methods => new string[] { HttpMethods.Get };
 

@@ -1,0 +1,18 @@
+
+### client_credentials
+POST https://localhost:7233/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=client1&client_secret=1234567890&scope=email
+
+### password
+POST https://localhost:7233/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=client1&client_secret=1234567890&scope=email&username=bob&password=1
+
+### authorization code
+POST https://localhost:7233/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&code=dac1f2a95d2d4a8bb3c82a814b652174&redirect_uri=https%3A%2F%2Fmylocalhost%2Fv1%2Fcallback&client_id=client1&scope=email

@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
+﻿using System.Security.Claims;
 using System.Threading.Tasks;
+using EasyIdentity.Models;
 
 namespace EasyIdentity.Services
 {
     public interface IAuthorizationCodeCreationService
     {
-        Task<string> CreateAsync(ClaimsPrincipal principal);
+        Task<string> CreateAsync(Client client, ClaimsPrincipal principal);
     }
 }

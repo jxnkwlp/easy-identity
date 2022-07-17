@@ -22,7 +22,7 @@ namespace EasyIdentity.Services
             Span<byte> buffer = new Span<byte>(new byte[value.Length]);
             if (Convert.TryFromBase64String(value, buffer, out int length))
             {
-                source = Encoding.UTF8.GetString(buffer.ToArray());
+                source = Encoding.UTF8.GetString(buffer.Slice(0, length));
                 return true;
             }
 
@@ -37,6 +37,11 @@ namespace EasyIdentity.Services
 
             var data = new Dictionary<string, string>();
 
+            foreach (var item in request.Query)
+            {
+                data[item.Key] = item.Value;
+            }
+
             if (request.Method == HttpMethods.Post && request.HasFormContentType)
             {
                 var formData = await request.ReadFormAsync();
@@ -47,21 +52,16 @@ namespace EasyIdentity.Services
                 }
             }
 
-            foreach (var item in request.Query)
-            {
-                data[item.Key] = item.Value;
-            }
-
             var authorization = request.Headers["Authorization"].ToString();
 
-            if (!string.IsNullOrEmpty(authorization) && authorization.StartsWith("Basic", StringComparison.InvariantCultureIgnoreCase))
+            if (!string.IsNullOrEmpty(authorization) && authorization.StartsWith("basic", StringComparison.InvariantCultureIgnoreCase))
             {
-                if (TryDecodeBase64String(authorization, out var value))
+                if (TryDecodeBase64String(authorization.Substring(5).Trim(), out var value))
                 {
                     if (value.IndexOf(":") > 0)
                     {
-                        data["client_id"] = value.Substring(0, value.IndexOf(":"));
-                        data["client_secret"] = value.Substring(value.IndexOf(":") + 1);
+                        data["client_id"] = value.Substring(0, value.IndexOf(":"))?.Trim();
+                        data["client_secret"] = value.Substring(value.IndexOf(":") + 1)?.Trim();
                     }
                 }
             }

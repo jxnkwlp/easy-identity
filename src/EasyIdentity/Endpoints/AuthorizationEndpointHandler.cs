@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using EasyIdentity.Models;
 using EasyIdentity.Services;
@@ -11,51 +12,53 @@ namespace EasyIdentity.Endpoints
 {
     public class AuthorizationEndpointHandler : IEndpointHandler
     {
-        public string Path => ProtocolRoutePaths.Authorize;
+        public string Path => EndpointProtocolRoutePaths.Authorize;
 
         public string[] Methods => new string[2] { HttpMethods.Get, HttpMethods.Post };
 
+
+        private readonly EasyIdentityOptions _easyIdentityOptions;
+
         private readonly IRequestParamReader _requestParamReader;
-        private readonly IAuthorizationRequestValidator _authorizationRequestValidator;
-        private readonly IAuthorizationCodeCreationService _authorizationCodeCreationService;
-        private readonly IAuthorizationCodeStoreService _authorizationCodeStoreService;
         private readonly IEnumerable<IGrantTypeHandler> _grantTypeHandlers;
         private readonly ITokenRequestValidator _tokenRequestValidator;
-        private readonly ITokenResponseWriter _tokenResponseWriter;
+        private readonly IResponseWriter _responseWriter;
 
-        public AuthorizationEndpointHandler(IRequestParamReader requestParamReader, IAuthorizationRequestValidator authorizationRequestValidator, IAuthorizationCodeCreationService authorizationCodeCreationService, IAuthorizationCodeStoreService authorizationCodeStoreService, IEnumerable<IGrantTypeHandler> grantTypeHandlers, ITokenRequestValidator tokenRequestValidator, ITokenResponseWriter tokenResponseWriter)
+        private readonly IAuthorizationRequestValidator _authorizationRequestValidator;
+        private readonly IAuthorizationCodeManager _authorizationCodeManager;
+
+        public AuthorizationEndpointHandler(EasyIdentityOptions easyIdentityOptions, IRequestParamReader requestParamReader, IEnumerable<IGrantTypeHandler> grantTypeHandlers, ITokenRequestValidator tokenRequestValidator, IResponseWriter responseWriter, IAuthorizationRequestValidator authorizationRequestValidator, IAuthorizationCodeManager authorizationCodeManager)
         {
+            _easyIdentityOptions = easyIdentityOptions;
             _requestParamReader = requestParamReader;
-            _authorizationRequestValidator = authorizationRequestValidator;
-            _authorizationCodeCreationService = authorizationCodeCreationService;
-            _authorizationCodeStoreService = authorizationCodeStoreService;
             _grantTypeHandlers = grantTypeHandlers;
             _tokenRequestValidator = tokenRequestValidator;
-            _tokenResponseWriter = tokenResponseWriter;
+            _responseWriter = responseWriter;
+            _authorizationRequestValidator = authorizationRequestValidator;
+            _authorizationCodeManager = authorizationCodeManager;
         }
 
         public async Task HandleAsync(HttpContext context)
         {
             var requestData = await _requestParamReader.ReadAsync();
 
-            var responseType = requestData["response_type"];
+            var validationResult = await _authorizationRequestValidator.ValidateAsync(requestData);
 
-            var validatedResult = await _authorizationRequestValidator.ValidateAsync(requestData);
-
-            if (!validatedResult.Succeeded)
+            if (!validationResult.Succeeded)
             {
-                context.Response.StatusCode = 400;
-                await context.Response.WriteAsJsonAsync(new { error = validatedResult.Error, error_description = validatedResult.ErrorDescription });
+                await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, validationResult.Error, validationResult.ErrorDescription));
                 return;
             }
 
-            var result = await context.AuthenticateAsync();
+            var result = await context.AuthenticateAsync(_easyIdentityOptions.AuthenticationScheme);
 
             if (result.Succeeded)
             {
+                var responseType = requestData.ResponseType;
+
                 if (responseType == "code")
                 {
-                    await AuthorizationCodeFlowAsync(context, requestData, result);
+                    await AuthorizationCodeFlowAsync(context, requestData, validationResult.Client, result);
                 }
                 else if (responseType == "token")
                 {
@@ -70,34 +73,50 @@ namespace EasyIdentity.Endpoints
             {
                 await context.ChallengeAsync();
             }
-
         }
 
-        private async Task AuthorizationCodeFlowAsync(HttpContext httpContext, RequestData requestData, AuthenticateResult result)
+        private async Task AuthorizationCodeFlowAsync(HttpContext httpContext, RequestData requestData, Client client, AuthenticateResult result)
         {
-            var code = await _authorizationCodeCreationService.CreateAsync(result.Principal);
+            var code = await _authorizationCodeManager.CreateCodeAsync(client, result.Principal);
 
-            await _authorizationCodeStoreService.SaveAsync(result.Principal, code, DateTime.UtcNow.AddSeconds(60));
-
-            httpContext.Response.Redirect($"{requestData["redirect_uri"]}?code={code}&state={requestData["state"]}");
+            await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, $"{requestData.RedirectUri}?code={code}&state={requestData.State}"));
         }
 
-        private async Task ImplicitFlowAsync(HttpContext httpContext, RequestData requestData, AuthenticateResult result)
-        { 
+        private async Task ImplicitFlowAsync(HttpContext httpContext, RequestData requestData, AuthenticateResult authenticateResult)
+        {
             var validationResult = await _tokenRequestValidator.ValidateAsync(GrantTypesConsts.Implicit, requestData);
 
-            // TOTO : validationResult
-
-            var handler = _grantTypeHandlers.FirstOrDefault(x => x.GrantType == GrantTypesConsts.Implicit);
-
-            var handleResult = await handler.HandleAsync(new GrantTypeHandleRequest(validationResult.Client, null, requestData.Data));
-
-            if (handleResult.HasError)
+            if (!validationResult.Succeeded)
             {
-                // TODO
+                await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, validationResult.Error, validationResult.ErrorDescription));
+                return;
             }
 
-            await _tokenResponseWriter.WriteAsync(httpContext, handleResult);
+            var grantTypeHandler = _grantTypeHandlers.FirstOrDefault(x => x.GrantType == GrantTypesConsts.Implicit);
+
+            if (grantTypeHandler == null)
+                throw new Exception($"The grant type '{validationResult.GrantType}' is not supported");
+
+            var subject = authenticateResult.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(subject))
+            {
+                throw new Exception("The user identifiter not found.");
+            }
+
+            var result = await grantTypeHandler.HandleAsync(new GrantTypeHandleRequest(subject, validationResult.Client, null, requestData));
+
+            if (result.Succeeded)
+            {
+                if (string.IsNullOrEmpty(result.HttpLocation))
+                    await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, result.HttpLocation));
+                else
+                    await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, result.Token.ToDictionary()));
+            }
+            else
+            {
+                await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, result.Failure));
+            }
         }
 
     }

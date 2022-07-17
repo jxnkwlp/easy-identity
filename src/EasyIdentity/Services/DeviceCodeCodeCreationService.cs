@@ -7,7 +7,7 @@ namespace EasyIdentity.Services
 {
     public class DeviceCodeCodeCreationService : IDeviceCodeCodeCreationService
     {
-        public Task<string> CreateCodeAsync(Client client)
+        public Task<string> CreateDeviceCodeAsync(Client client)
         {
             return Task.FromResult(Guid.NewGuid().ToString());
         }
