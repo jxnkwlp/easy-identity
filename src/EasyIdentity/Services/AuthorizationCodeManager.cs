@@ -2,20 +2,21 @@
 using System.Security.Claims;
 using System.Threading.Tasks;
 using EasyIdentity.Models;
+using Microsoft.Extensions.Options;
 
 namespace EasyIdentity.Services
 {
     public class AuthorizationCodeManager : IAuthorizationCodeManager
     {
+        private readonly EasyIdentityOptions _options;
         private readonly IAuthorizationCodeCreationService _authorizationCodeCreationService;
         private readonly IAuthorizationCodeStoreService _authorizationCodeStoreService;
-        private readonly EasyIdentityOptions _options;
 
-        public AuthorizationCodeManager(IAuthorizationCodeCreationService authorizationCodeCreationService, IAuthorizationCodeStoreService authorizationCodeStoreService, EasyIdentityOptions options)
+        public AuthorizationCodeManager(IOptions<EasyIdentityOptions> options, IAuthorizationCodeCreationService authorizationCodeCreationService, IAuthorizationCodeStoreService authorizationCodeStoreService)
         {
+            _options = options.Value;
             _authorizationCodeCreationService = authorizationCodeCreationService;
             _authorizationCodeStoreService = authorizationCodeStoreService;
-            _options = options;
         }
 
         public async Task<string> CreateCodeAsync(Client client, ClaimsPrincipal claimsPrincipal)

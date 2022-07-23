@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using EasyIdentity.Models;
 using EasyIdentity.Stores;
 
@@ -34,12 +35,18 @@ namespace EasyIdentity.Services
 
             var client = await _clientStore.FindClientAsync(clientId);
 
-            var result = ValidateClient(client, requestData);
+            if (client.ClientSecretRequired && string.IsNullOrEmpty(clientSecret))
+                return RequestValidationResult.Fail("invalid_request", "The client secret is required.");
 
-            if (!result.Succeeded)
-                return result;
+            if (client.ClientSecretRequired && client.ClientSecret != clientSecret)
+                return RequestValidationResult.Fail("invalid_client", "Invalid client secret.");
 
-            // 
+            if (requestData.Scope?.Split(" ").Except(client.Scopes).Count() > 0)
+                return RequestValidationResult.Fail("invalid_scope", "Invalid scope.");
+
+            if (client.GrantTypes.Contains(requestData.GrantType) == false)
+                return RequestValidationResult.Fail("unsupported_grant_type", "Invalid grant type.");
+
             if (string.IsNullOrWhiteSpace(code))
                 return RequestValidationResult.Fail("invalid_request", "The code is missing.");
 

@@ -8,3 +8,16 @@
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
+
+
+<div>
+    <p>Identity: @User.Identity?.Name </p>
+    <p>AuthenticationType: @User.Identity?.AuthenticationType </p>
+    <p>Claims</p>
+    <ul>
+        @foreach (var item in User.Claims)
+        {
+            <li>@item.Type : @item.Value</li>
+        }
+    </ul>
+</div>

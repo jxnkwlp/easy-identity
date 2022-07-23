@@ -1,78 +1,113 @@
-﻿using EasyIdentity.Endpoints;
+﻿using System;
+using EasyIdentity.Endpoints;
 using EasyIdentity.Services;
 using EasyIdentity.Stores;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace EasyIdentity.Extensions
+namespace EasyIdentity.Extensions;
+
+public static class ServicesCollectionExtensions
 {
-    public static class ServicesCollectionExtensions
+    public static EasyIdentityBuilder AddEasyIdentity(this IServiceCollection services, Action<EasyIdentityOptions> optionSetup)
     {
-        public static EasyIdentityOptionsBuilder AddEasyIdentity(this IServiceCollection services)
+        if (optionSetup is null)
         {
-            var builder = new EasyIdentityOptionsBuilder(services, new EasyIdentityOptions());
-
-            services.AddHttpContextAccessor();
-
-            services.AddSingleton((_) => builder);
-            services.AddOptions<EasyIdentityOptions>();
-
-            services.AddEasyIdentityEndpointHandler<DiscoveryEndpointHandler>();
-            services.AddEasyIdentityEndpointHandler<JwksEndpointHandler>();
-            services.AddEasyIdentityEndpointHandler<AuthorizationEndpointHandler>();
-            services.AddEasyIdentityEndpointHandler<TokenEndpointHandler>();
-            services.AddEasyIdentityEndpointHandler<DeviceCodeEndpointHandler>();
-
-            services.AddTransient<IClientStore, MemoryClientStore>();
-
-            services.AddTransient<IRequestParamReader, RequestParamReader>();
-            services.AddTransient<ITokenRequestValidator, TokenRequestValidator>();
-            services.AddTransient<IResponseWriter, ResponseWriter>();
-
-            services.AddTransient<IClientCredentialsIdentityCreationService, ClientCredentialsIdentityCreationService>();
-
-            services.AddTransient<IGrantTypeTokenRequestValidator, ClientCredentialsTokenRequestValidator>();
-            services.AddTransient<IGrantTypeTokenRequestValidator, PasswordTokenRequestValidator>();
-            services.AddTransient<IGrantTypeTokenRequestValidator, AuthorizationCodeTokenRequestValidator>();
-            services.AddTransient<IGrantTypeTokenRequestValidator, ImplicitTokenRequestValidator>();
-
-            services.AddTransient<IGrantTypeHandler, ClientCredentialsGrantTypeHandler>();
-            services.AddTransient<IGrantTypeHandler, PasswordGrantTypeHandler>();
-            services.AddTransient<IGrantTypeHandler, AuthorizationCodeGrantTypeHandler>();
-            services.AddTransient<IGrantTypeHandler, ImplicitGrantTypeHandler>();
-
-            services.AddTransient<IAuthorizationCodeManager, AuthorizationCodeManager>();
-            services.AddTransient<IAuthorizationRequestValidator, AuthorizationRequestValidator>();
-            services.AddTransient<IAuthorizationCodeCreationService, AuthorizationCodeCreationService>();
-            services.AddTransient<IAuthorizationCodeStoreService, AuthorizationCodeStoreService>();
-
-            services.AddTransient<IDeviceCodeManager, DeviceCodeService>();
-            services.AddTransient<IDeviceCodeRequestValidator, DeviceCodeRequestValidator>();
-            services.AddTransient<IDeviceCodeCodeCreationService, DeviceCodeCodeCreationService>();
-            services.AddTransient<IDeviceCodeStoreService, DeviceCodeStoreService>();
-
-            services.AddTransient<ITokenManager, TokenManager>();
-            services.AddTransient<ITokenCreationService, JwtTokenCreationService>();
-
-            services.AddTransient<IAuthorizationInteractionService, AuthorizationInteractionService>();
-
-            services.AddTransient<IJsonSerializer, DefaultJsonSerializer>();
-
-            services.AddTransient<IRedirectUrlValidator, RedirectUrlValidator>();
-
-            services.AddSingleton<EasyIdentityOptions>((_) => builder.Options);
-
-            return builder;
+            throw new ArgumentNullException(nameof(optionSetup));
         }
 
-        public static IServiceCollection AddEasyIdentityEndpointHandler<TEndpointHandler>(this IServiceCollection services) where TEndpointHandler : class, IEndpointHandler
-        {
-            return services.AddTransient<IEndpointHandler, TEndpointHandler>();
-        }
+        // depends on
+        services
+            .AddOptions()
+            .AddLogging()
+            .AddHttpContextAccessor();
 
-        public static IServiceCollection AddEasyIdentityUserProfileService<TProfileService>(this IServiceCollection services) where TProfileService : class, IUserService
-        {
-            return services.AddScoped<IUserService, TProfileService>();
-        }
+        var builder = new EasyIdentityBuilder(services);
 
+        services.AddSingleton((_) => builder);
+
+        services.Configure(optionSetup);
+
+        services
+            .AddOptions<EasyIdentityOptions>()
+#if NET5_0_OR_GREATER
+            .BindConfiguration(EasyIdentityOptions.EasyIdentity)
+#else
+            .Configure<IConfiguration>((opt, configure) =>
+            {
+                configure.Bind(EasyIdentityOptions.EasyIdentity, opt);
+            })
+#endif
+            .Configure(optionSetup)
+            ;
+
+        // EndpointHandler
+        services.AddEasyIdentityEndpointHandler<DiscoveryEndpointHandler>();
+        services.AddEasyIdentityEndpointHandler<JwksEndpointHandler>();
+        services.AddEasyIdentityEndpointHandler<AuthorizationEndpointHandler>();
+        services.AddEasyIdentityEndpointHandler<TokenEndpointHandler>();
+        services.AddEasyIdentityEndpointHandler<DeviceCodeEndpointHandler>();
+
+        // Store
+        services.AddSingleton<IClientStore, MemoryClientStore>();
+        services.AddScoped<ISigningCredentialsStore, EmptySigningCredentialsStore>();
+
+        // request/response
+        services.AddScoped<IRequestParamReader, RequestParamReader>();
+        services.AddScoped<ITokenRequestValidator, TokenRequestValidator>();
+        services.AddScoped<IResponseWriter, ResponseWriter>();
+
+        // Token
+        services.AddScoped<ITokenManager, TokenManager>();
+        services.AddScoped<ITokenCreationService, JwtTokenCreationService>();
+
+        // common service
+        services.AddScoped<IRedirectUrlValidator, RedirectUrlValidator>();
+        services.AddSingleton<IJsonSerializer, DefaultJsonSerializer>();
+
+        // 
+        services.AddScoped<IAuthorizationInteractionService, AuthorizationInteractionService>();
+
+        // GrantTypeTokenRequestValidator
+        services.AddScoped<IGrantTypeTokenRequestValidator, ClientCredentialsTokenRequestValidator>();
+        services.AddScoped<IGrantTypeTokenRequestValidator, PasswordTokenRequestValidator>();
+        services.AddScoped<IGrantTypeTokenRequestValidator, AuthorizationCodeTokenRequestValidator>();
+        services.AddScoped<IGrantTypeTokenRequestValidator, ImplicitTokenRequestValidator>();
+        services.AddScoped<IGrantTypeTokenRequestValidator, DeviceCodeTokenRequestValidator>();
+
+        // GrantTypeHandler
+        services.AddScoped<IGrantTypeHandler, ClientCredentialsGrantTypeHandler>();
+        services.AddScoped<IGrantTypeHandler, PasswordGrantTypeHandler>();
+        services.AddScoped<IGrantTypeHandler, AuthorizationCodeGrantTypeHandler>();
+        services.AddScoped<IGrantTypeHandler, ImplicitGrantTypeHandler>();
+        services.AddScoped<IGrantTypeHandler, DeviceCodeGrantTypeHandler>();
+
+        // ClientCredentials
+        services.AddScoped<IClientCredentialsIdentityCreationService, ClientCredentialsIdentityCreationService>();
+
+        // AuthorizationCode
+        services.AddScoped<IAuthorizationCodeManager, AuthorizationCodeManager>();
+        services.AddScoped<IAuthorizationRequestValidator, AuthorizationRequestValidator>();
+        services.AddScoped<IAuthorizationCodeCreationService, AuthorizationCodeCreationService>();
+        services.AddScoped<IAuthorizationCodeStoreService, AuthorizationCodeStoreService>();
+
+        // DeviceCode
+        services.AddScoped<IDeviceCodeManager, DeviceCodeManager>();
+        services.AddScoped<IDeviceCodeRequestValidator, DeviceCodeRequestValidator>();
+        services.AddScoped<IDeviceCodeCodeCreationService, DeviceCodeCodeCreationService>();
+        services.AddScoped<IDeviceCodeStoreService, DeviceCodeStoreService>();
+
+        return builder;
     }
+
+    public static IServiceCollection AddEasyIdentityEndpointHandler<TEndpointHandler>(this IServiceCollection services) where TEndpointHandler : class, IEndpointHandler
+    {
+        return services.AddScoped<IEndpointHandler, TEndpointHandler>();
+    }
+
+    public static IServiceCollection AddEasyIdentityUserProfileService<TProfileService>(this IServiceCollection services) where TProfileService : class, IUserService
+    {
+        return services.AddScoped<IUserService, TProfileService>();
+    }
+
 }

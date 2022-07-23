@@ -17,7 +17,7 @@ builder.Services
     .AddJwtBearer()
     ;
 
-var identityBuilder = builder.Services.AddEasyIdentity();
+var identityBuilder = builder.Services.AddEasyIdentity(option => { });
 
 identityBuilder.AddClient(new EasyIdentity.Models.Client
 {
@@ -31,7 +31,7 @@ identityBuilder.AddClient(new EasyIdentity.Models.Client
     RedirectUrls = new string[] { "" }
 })
 .AddStandardScopes()
-.AddDevelopmentSigningCredentials()
+.AddDevelopmentRSASigningCredentialsStore()
 .AddUserProfileService<TestUserService>()
 ;
 
@@ -50,6 +50,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseAuthentication();
 
 app.UseEasyIdentity();
 

@@ -17,11 +17,12 @@ namespace EasyIdentity.Services
 
         public async Task<RequestValidationResult> ValidateAsync(RequestData requestData)
         {
-            var clientId = requestData["client_id"];
-            var scope = requestData["scope"];
-            var responseType = requestData["response_type"];
-            var redirectUri = requestData["redirect_uri"];
-            var state = requestData["state"];
+            var grantType = requestData.GrantType;
+            var clientId = requestData.ClientId;
+            var scope = requestData.Scope;
+            var code = requestData.Code;
+            var redirectUri = requestData.RedirectUri;
+            var responseType = requestData.ResponseType;
 
             if (string.IsNullOrEmpty(scope))
             {

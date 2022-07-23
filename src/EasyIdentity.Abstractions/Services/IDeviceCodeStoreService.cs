@@ -3,16 +3,27 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using EasyIdentity.Models;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+public interface IDeviceCodeStoreService
 {
-    public interface IDeviceCodeStoreService
-    {
-        Task CreateAsync(DeviceCodeData data, Client client, DateTime expiration);
+    Task CreateAsync(DeviceCodeData data, string clientId, DateTime expiration);
 
-        Task UpdateAsync(string deviceCode, ClaimsPrincipal principal);
+    Task UpdateAsync(string deviceCode, string clientId, ClaimsPrincipal principal, bool granted);
 
-        Task<string> GetSubjectAsync(string deviceCode);
+    Task<string> FindDeviceCodeAsync(string userCode, string clientId = null);
 
-        Task RemoveAsync(string deviceCode);
-    }
+    Task<string> FindSubjectAsync(string deviceCode);
+
+    Task<string> FindClientIdAsync(string deviceCode);
+
+    Task<bool> IsGrantedAsync(string deviceCode);
+
+    Task<bool> IsExistsAsync(string deviceCode, string userCode);
+
+    Task<bool> IsExistsAsync(string deviceCode);
+
+    Task<bool> IsExpirationAsync(string deviceCode);
+
+    Task RemoveAsync(string deviceCode);
 }

@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using Microsoft.IdentityModel.Tokens;
 
 namespace EasyIdentity;
 
 public class EasyIdentityOptions
 {
-    public IList<SigningCredentials> SigningCredentials { get; set; }
+    public const string EasyIdentity = "EasyIdentity";
 
     public string AuthenticationScheme { get; set; }
 
@@ -18,9 +16,9 @@ public class EasyIdentityOptions
     public TimeSpan DefaultDeviceCodeLifetime { get; set; } = TimeSpan.FromMinutes(5);
     public TimeSpan DefaultAuthorizationCodeLifetime { get; set; } = TimeSpan.FromMinutes(1);
     public int DefaultDevicePollingInterval { get; set; } = 5;
+    public Uri DeviceCodeVerificationUri { get; set; }
 
     public EasyIdentityOptions()
     {
-        SigningCredentials = new List<SigningCredentials>();
     }
 }

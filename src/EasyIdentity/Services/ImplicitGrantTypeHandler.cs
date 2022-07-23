@@ -31,14 +31,9 @@ namespace EasyIdentity.Services
 
             var token = await _tokenManager.CreateAsync(subject, client, userProfile.Principal);
 
-            return GrantTypeHandledResult.Success(new TokenData
-            {
-                AccessToken = token.AccessToken,
-                RefreshToken = token.RefreshToken,
-                Scope = string.Join(" ", client.Scopes),
-                ExpiresIn = (int)token.TokenDescriptor.Lifetime.TotalSeconds,
-                TokenType = token.TokenDescriptor.TokenType,
-            });
+            string url = $"{request.Data.RedirectUri}?#access_token={token.AccessToken}&token_type=Bearer&scope={string.Join(" ", client.Scopes)}&state={request.Data.State}&expires_in={(int)token.TokenDescriptor.Lifetime.TotalSeconds}";
+
+            return GrantTypeHandledResult.Success(url);
         }
     }
 }

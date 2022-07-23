@@ -2,51 +2,55 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
+using EasyIdentity.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using JsonWebKey = EasyIdentity.Models.JsonWebKey;
 
-namespace EasyIdentity.Endpoints
+namespace EasyIdentity.Endpoints;
+
+public class JwksEndpointHandler : IEndpointHandler
 {
-    public class JwksEndpointHandler : IEndpointHandler
+    public string Path => EndpointProtocolRoutePaths.DiscoveryWebKeys;
+
+    public string[] Methods => new string[] { HttpMethods.Get };
+
+    private readonly EasyIdentityOptions _easyIdentityOptions;
+    private readonly ISigningCredentialsStore _signingCredentialsStore;
+
+    public JwksEndpointHandler(IOptions<EasyIdentityOptions> easyIdentityOptions, ISigningCredentialsStore signingCredentialsStore)
     {
-        public string Path => EndpointProtocolRoutePaths.DiscoveryWebKeys;
+        _easyIdentityOptions = easyIdentityOptions.Value;
+        _signingCredentialsStore = signingCredentialsStore;
+    }
 
-        public string[] Methods => new string[] { HttpMethods.Get };
+    public async Task HandleAsync(HttpContext context)
+    {
+        var list = new List<JsonWebKey>();
 
-        private readonly EasyIdentityOptions _easyIdentityOptions;
-
-        public JwksEndpointHandler(EasyIdentityOptions easyIdentityOptions)
+        var signingCredentials = await _signingCredentialsStore.GetSigningCredentialsAsync();
+        foreach (var item in signingCredentials)
         {
-            _easyIdentityOptions = easyIdentityOptions;
-        }
-
-        public async Task HandleAsync(HttpContext context)
-        {
-            var list = new List<JsonWebKey>();
-
-            foreach (var item in _easyIdentityOptions.SigningCredentials)
+            JsonWebKey webKey = new JsonWebKey()
             {
-                JsonWebKey webKey = new JsonWebKey()
-                {
-                    Kid = item.Kid,
-                    Use = "sig",
-                };
+                Kid = item.Kid,
+                Use = "sig",
+            };
 
-                if (item.Key is RsaSecurityKey rsaSecurityKey)
-                {
-                    var parameters = rsaSecurityKey.Rsa.ExportParameters(false);
+            if (item.Key is RsaSecurityKey rsaSecurityKey)
+            {
+                var parameters = rsaSecurityKey.Rsa.ExportParameters(false);
 
-                    webKey.Kty = "RSA";
-                    webKey.Alg = item.Algorithm;
-                    webKey.N = Convert.ToBase64String(parameters.Modulus);
-                    webKey.E = Convert.ToBase64String(parameters.Exponent);
-                }
-
-                list.Add(webKey);
+                webKey.Kty = "RSA";
+                webKey.Alg = item.Algorithm;
+                webKey.N = Convert.ToBase64String(parameters.Modulus);
+                webKey.E = Convert.ToBase64String(parameters.Exponent);
             }
 
-            await context.Response.WriteAsJsonAsync(new { keys = list }, new JsonSerializerOptions(JsonSerializerDefaults.Web) { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull });
+            list.Add(webKey);
         }
+
+        await context.Response.WriteAsJsonAsync(new { keys = list }, new JsonSerializerOptions(JsonSerializerDefaults.Web) { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull });
     }
 }
