@@ -3,11 +3,10 @@ using System.Threading.Tasks;
 using EasyIdentity.Models;
 using Microsoft.AspNetCore.Http;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+[Obsolete]
+public interface ITokenResponseWriter
 {
-    [Obsolete]
-    public interface ITokenResponseWriter
-    {
-        Task WriteAsync(HttpContext context, GrantTypeHandledResult result);
-    }
+    Task WriteAsync(HttpContext context, GrantTypeHandledResult result);
 }

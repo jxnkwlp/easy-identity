@@ -7,7 +7,7 @@ namespace EasyIdentity.Services;
 
 public class EmptySigningCredentialsStore : ISigningCredentialsStore
 {
-    public Task<List<SigningCredentials>> GetSigningCredentialsAsync(Client client=null)
+    public Task<List<SigningCredentials>> GetSigningCredentialsAsync(Client client = null)
     {
         return Task.FromResult<List<SigningCredentials>>(default);
     }

@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks;
 using EasyIdentity.Models;
 
-namespace EasyIdentity.Stores
+namespace EasyIdentity.Stores;
+
+public interface IScopeStore
 {
-    public interface IScopeStore
-    {
-        Task<Scope> FindScopeAsync(string name);
-    }
+    Task<Scope> FindScopeAsync(string name);
 }

@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks;
 using EasyIdentity.Models;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+public interface IClientSecretValidator
 {
-    public interface IClientSecretValidator
-    {
-        Task<bool> ValidateAsync(Client client, string secret);
-    }
+    Task<bool> ValidateAsync(Client client, string secret);
 }

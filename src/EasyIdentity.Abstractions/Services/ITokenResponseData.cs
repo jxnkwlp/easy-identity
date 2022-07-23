@@ -1,7 +1,6 @@
-﻿namespace EasyIdentity.Services
-{
-    public interface ITokenResponseData
-    {
+﻿namespace EasyIdentity.Services;
 
-    }
+public interface ITokenResponseData
+{
+
 }

@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks;
 using EasyIdentity.Models;
 
-namespace EasyIdentity.Stores
+namespace EasyIdentity.Stores;
+
+public interface IClientStore
 {
-    public interface IClientStore
-    {
-        Task<Client> FindClientAsync(string clientId);
-    }
+    Task<Client> FindClientAsync(string clientId);
 }

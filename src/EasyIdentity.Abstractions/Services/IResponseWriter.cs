@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks;
 using EasyIdentity.Models;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+public interface IResponseWriter
 {
-    public interface IResponseWriter
-    {
-        Task WriteAsync(ResponseDescriptor descriptor);
-    }
+    Task WriteAsync(ResponseDescriptor descriptor);
 }

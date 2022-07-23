@@ -1,6 +1,5 @@
-﻿namespace EasyIdentity.Services
+﻿namespace EasyIdentity.Services;
+
+public interface IRequestErrorHandler
 {
-    public interface IRequestErrorHandler
-    {
-    }
 }

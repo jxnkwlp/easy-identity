@@ -4,46 +4,45 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using EasyIdentity.Extensions;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+public class AuthorizationCodeStoreService : IAuthorizationCodeStoreService
 {
-    public class AuthorizationCodeStoreService : IAuthorizationCodeStoreService
+    private static readonly ConcurrentDictionary<string, AuthorizationCode> _cache = new ConcurrentDictionary<string, AuthorizationCode>();
+
+    public Task<string> GetSubjectAsync(string code)
     {
-        private static readonly ConcurrentDictionary<string, AuthorizationCode> _cache = new ConcurrentDictionary<string, AuthorizationCode>();
-
-        public Task<string> GetSubjectAsync(string code)
+        if (_cache.TryGetValue(code, out var subject))
         {
-            if (_cache.TryGetValue(code, out var subject))
-            {
-                if (subject.Expiration < DateTime.UtcNow)
-                    return Task.FromResult(String.Empty);
-                else
-                    return Task.FromResult(subject.Subject);
-            }
-
-            return Task.FromResult(String.Empty);
+            if (subject.Expiration < DateTime.UtcNow)
+                return Task.FromResult(String.Empty);
+            else
+                return Task.FromResult(subject.Subject);
         }
 
-        public Task RemoveAsync(string code)
-        {
-            _cache.TryRemove(code, out var _);
+        return Task.FromResult(String.Empty);
+    }
 
-            return Task.CompletedTask;
-        }
+    public Task RemoveAsync(string code)
+    {
+        _cache.TryRemove(code, out var _);
 
-        public Task CreateAsync(ClaimsPrincipal principal, string code, DateTime expiration)
-        {
-            var subject = principal.GetSubject();
+        return Task.CompletedTask;
+    }
 
-            _cache[code] = new AuthorizationCode { Subject = subject, Expiration = expiration };
+    public Task CreateAsync(ClaimsPrincipal principal, string code, DateTime expiration)
+    {
+        var subject = principal.GetSubject();
 
-            return Task.CompletedTask;
-        }
+        _cache[code] = new AuthorizationCode { Subject = subject, Expiration = expiration };
 
-        public class AuthorizationCode
-        {
-            public string Subject { get; set; }
+        return Task.CompletedTask;
+    }
 
-            public DateTime Expiration { get; set; }
-        }
+    public class AuthorizationCode
+    {
+        public string Subject { get; set; }
+
+        public DateTime Expiration { get; set; }
     }
 }

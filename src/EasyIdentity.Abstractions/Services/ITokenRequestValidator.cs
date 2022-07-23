@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks;
 using EasyIdentity.Models;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+public interface ITokenRequestValidator
 {
-    public interface ITokenRequestValidator
-    {
-        Task<RequestValidationResult> ValidateAsync(string grantType, RequestData data);
-    }
+    Task<RequestValidationResult> ValidateAsync(string grantType, RequestData data);
 }

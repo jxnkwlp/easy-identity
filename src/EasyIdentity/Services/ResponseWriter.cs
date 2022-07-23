@@ -2,58 +2,57 @@
 using EasyIdentity.Models;
 using Microsoft.AspNetCore.Http;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+public class ResponseWriter : IResponseWriter
 {
-    public class ResponseWriter : IResponseWriter
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public ResponseWriter(IHttpContextAccessor httpContextAccessor)
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        _httpContextAccessor = httpContextAccessor;
+    }
 
-        public ResponseWriter(IHttpContextAccessor httpContextAccessor)
-        {
-            _httpContextAccessor = httpContextAccessor;
-        }
-
-        public async Task WriteAsync(ResponseDescriptor descriptor)
-        {
-            var context = _httpContextAccessor.HttpContext;
-            var response = context.Response;
+    public async Task WriteAsync(ResponseDescriptor descriptor)
+    {
+        var context = _httpContextAccessor.HttpContext;
+        var response = context.Response;
 
 #if NET6_0_OR_GREATER
-            context.Response.Headers.CacheControl = "no-store";
+        context.Response.Headers.CacheControl = "no-store";
 #elif NET5_0
-            context.Response.Headers["Cache-Control"] = "no-store";
+        context.Response.Headers["Cache-Control"] = "no-store";
 #endif
 
-            // TODO: response.HasStarted
+        // TODO: response.HasStarted
 
-            if (!descriptor.Succeeded)
+        if (!descriptor.Succeeded)
+        {
+            response.StatusCode = 400;
+
+            await response.WriteAsJsonAsync(new
             {
-                response.StatusCode = 400;
+                error = descriptor.Error,
+                error_description = descriptor.ErrorDescription,
+            });
 
-                await response.WriteAsJsonAsync(new
-                {
-                    error = descriptor.Error,
-                    error_description = descriptor.ErrorDescription,
-                });
+            return;
+        }
 
-                return;
-            }
+        if (!string.IsNullOrEmpty(descriptor.HttpLocation))
+        {
+            response.Redirect(descriptor.HttpLocation, false);
 
-            if (!string.IsNullOrEmpty(descriptor.HttpLocation))
-            {
-                response.Redirect(descriptor.HttpLocation, false);
+            return;
+        }
 
-                return;
-            }
-
-            if (descriptor.Data != null)
-            {
-                await response.WriteAsJsonAsync(descriptor.Data);
-            }
-            else
-            {
-                // no-op
-            }
+        if (descriptor.Data != null)
+        {
+            await response.WriteAsJsonAsync(descriptor.Data);
+        }
+        else
+        {
+            // no-op
         }
     }
 }

@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks;
 using EasyIdentity.Models;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+public interface IDeviceCodeRequestValidator
 {
-    public interface IDeviceCodeRequestValidator
-    {
-        Task<RequestValidationResult> ValidateAsync(RequestData data);
-    }
+    Task<RequestValidationResult> ValidateAsync(RequestData data);
 }

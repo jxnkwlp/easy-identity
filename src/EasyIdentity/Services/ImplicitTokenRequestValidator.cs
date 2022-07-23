@@ -2,41 +2,40 @@
 using EasyIdentity.Models;
 using EasyIdentity.Stores;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+public class ImplicitTokenRequestValidator : IGrantTypeTokenRequestValidator
 {
-    public class ImplicitTokenRequestValidator : IGrantTypeTokenRequestValidator
+    public string GrantType => GrantTypesConsts.Implicit;
+
+    private readonly IClientStore _clientStore;
+
+    public ImplicitTokenRequestValidator(IClientStore clientStore)
     {
-        public string GrantType => GrantTypesConsts.Implicit;
+        _clientStore = clientStore;
+    }
 
-        private readonly IClientStore _clientStore;
+    public async Task<RequestValidationResult> ValidateAsync(RequestData requestData)
+    {
+        var grantType = requestData.GrantType;
+        var clientId = requestData.ClientId;
+        var scope = requestData.Scope;
+        var redirectUri = requestData.RedirectUri;
 
-        public ImplicitTokenRequestValidator(IClientStore clientStore)
-        {
-            _clientStore = clientStore;
-        }
+        if (string.IsNullOrEmpty(clientId))
+            return RequestValidationResult.Fail("invalid_request");
 
-        public async Task<RequestValidationResult> ValidateAsync(RequestData requestData)
-        {
-            var grantType = requestData.GrantType;
-            var clientId = requestData.ClientId;
-            var scope = requestData.Scope;
-            var redirectUri = requestData.RedirectUri;
+        var client = await _clientStore.FindClientAsync(clientId);
 
-            if (string.IsNullOrEmpty(clientId))
-                return RequestValidationResult.Fail("invalid_request");
+        if (client == null)
+            return RequestValidationResult.Fail("invalid_client", "Invalid client Id.");
 
-            var client = await _clientStore.FindClientAsync(clientId);
+        // if (string.IsNullOrWhiteSpace(redirectUri))
+        // TODO
 
-            if (client == null)
-                return RequestValidationResult.Fail("invalid_client", "Invalid client Id.");
+        //if (client.GrantTypes.Contains(grantType) == false)
+        //    return RequestValidationResult.Fail("unsupported_grant_type", "Invalid grant type.");
 
-            // if (string.IsNullOrWhiteSpace(redirectUri))
-            // TODO
-
-            //if (client.GrantTypes.Contains(grantType) == false)
-            //    return RequestValidationResult.Fail("unsupported_grant_type", "Invalid grant type.");
-
-            return RequestValidationResult.Success(client, requestData, grantType);
-        }
+        return RequestValidationResult.Success(client, requestData, grantType);
     }
 }

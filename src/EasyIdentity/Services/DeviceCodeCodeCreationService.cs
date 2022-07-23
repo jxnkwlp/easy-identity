@@ -3,20 +3,19 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using EasyIdentity.Models;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+public class DeviceCodeCodeCreationService : IDeviceCodeCodeCreationService
 {
-    public class DeviceCodeCodeCreationService : IDeviceCodeCodeCreationService
+    public Task<string> CreateDeviceCodeAsync(Client client)
     {
-        public Task<string> CreateDeviceCodeAsync(Client client)
-        {
-            return Task.FromResult(Guid.NewGuid().ToString());
-        }
+        return Task.FromResult(Guid.NewGuid().ToString());
+    }
 
-        public Task<string> CreateUserCodeAsync(Client client)
-        {
-            var result = RandomNumberGenerator.GetInt32(1000, 10000);
+    public Task<string> CreateUserCodeAsync(Client client)
+    {
+        var result = RandomNumberGenerator.GetInt32(1000, 10000);
 
-            return Task.FromResult(result.ToString());
-        }
+        return Task.FromResult(result.ToString());
     }
 }

@@ -2,31 +2,30 @@
 using System.Threading.Tasks;
 using EasyIdentity.Models;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+[Obsolete]
+public abstract class GrantTypeTokenRequestValidator : IGrantTypeTokenRequestValidator
 {
-    [Obsolete]
-    public abstract class GrantTypeTokenRequestValidator : IGrantTypeTokenRequestValidator
+    public abstract string GrantType { get; }
+
+    public abstract Task<RequestValidationResult> ValidateAsync(RequestData data);
+
+    protected RequestValidationResult ValidateClient(Client client, RequestData requestData)
     {
-        public abstract string GrantType { get; }
+        //if (client.ClientSecretRequired && string.IsNullOrEmpty(requestData.ClientSecret))
+        //    return RequestValidationResult.Fail("invalid_request", "The client secret missing.");
 
-        public abstract Task<RequestValidationResult> ValidateAsync(RequestData data);
+        //if (client.ClientSecretRequired && client.ClientSecret != requestData.ClientSecret)
+        //    return RequestValidationResult.Fail("invalid_client", "Invalid client secret.");
 
-        protected RequestValidationResult ValidateClient(Client client, RequestData requestData)
-        {
-            //if (client.ClientSecretRequired && string.IsNullOrEmpty(requestData.ClientSecret))
-            //    return RequestValidationResult.Fail("invalid_request", "The client secret missing.");
+        //if (requestData.Scope?.Split(" ").Except(client.Scopes).Count() > 0)
+        //    return RequestValidationResult.Fail("invalid_scope", "Invalid scope.");
 
-            //if (client.ClientSecretRequired && client.ClientSecret != requestData.ClientSecret)
-            //    return RequestValidationResult.Fail("invalid_client", "Invalid client secret.");
+        //if (client.GrantTypes.Contains(requestData.GrantType) == false)
+        //    return RequestValidationResult.Fail("unsupported_grant_type", "Invalid grant type.");
 
-            //if (requestData.Scope?.Split(" ").Except(client.Scopes).Count() > 0)
-            //    return RequestValidationResult.Fail("invalid_scope", "Invalid scope.");
-
-            //if (client.GrantTypes.Contains(requestData.GrantType) == false)
-            //    return RequestValidationResult.Fail("unsupported_grant_type", "Invalid grant type.");
-
-            return RequestValidationResult.Success(client, requestData, null);
-        }
-
+        return RequestValidationResult.Success(client, requestData, null);
     }
+
 }

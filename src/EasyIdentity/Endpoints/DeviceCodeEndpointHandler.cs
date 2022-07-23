@@ -3,42 +3,41 @@ using EasyIdentity.Models;
 using EasyIdentity.Services;
 using Microsoft.AspNetCore.Http;
 
-namespace EasyIdentity.Endpoints
+namespace EasyIdentity.Endpoints;
+
+public class DeviceCodeEndpointHandler : IEndpointHandler
 {
-    public class DeviceCodeEndpointHandler : IEndpointHandler
+    public string Path => EndpointProtocolRoutePaths.DeviceCode;
+
+    public string[] Methods => new string[] { HttpMethods.Post };
+
+    private readonly IRequestParamReader _requestParamReader;
+    private readonly IDeviceCodeRequestValidator _deviceCodeRequestValidator;
+    private readonly IDeviceCodeManager _deviceCodeManager;
+    private readonly IResponseWriter _responseWriter;
+
+    public DeviceCodeEndpointHandler(IRequestParamReader requestParamReader, IDeviceCodeRequestValidator deviceCodeRequestValidator, IDeviceCodeManager deviceCodeManager, IResponseWriter responseWriter)
     {
-        public string Path => EndpointProtocolRoutePaths.DeviceCode;
+        _requestParamReader = requestParamReader;
+        _deviceCodeRequestValidator = deviceCodeRequestValidator;
+        _deviceCodeManager = deviceCodeManager;
+        _responseWriter = responseWriter;
+    }
 
-        public string[] Methods => new string[] { HttpMethods.Post };
+    public async Task HandleAsync(HttpContext context)
+    {
+        var requestData = await _requestParamReader.ReadAsync();
 
-        private readonly IRequestParamReader _requestParamReader;
-        private readonly IDeviceCodeRequestValidator _deviceCodeRequestValidator;
-        private readonly IDeviceCodeManager _deviceCodeManager;
-        private readonly IResponseWriter _responseWriter;
+        var validationResult = await _deviceCodeRequestValidator.ValidateAsync(requestData);
 
-        public DeviceCodeEndpointHandler(IRequestParamReader requestParamReader, IDeviceCodeRequestValidator deviceCodeRequestValidator, IDeviceCodeManager deviceCodeManager, IResponseWriter responseWriter)
+        if (!validationResult.Succeeded)
         {
-            _requestParamReader = requestParamReader;
-            _deviceCodeRequestValidator = deviceCodeRequestValidator;
-            _deviceCodeManager = deviceCodeManager;
-            _responseWriter = responseWriter;
+            await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, validationResult.Error, validationResult.ErrorDescription));
+            return;
         }
 
-        public async Task HandleAsync(HttpContext context)
-        {
-            var requestData = await _requestParamReader.ReadAsync();
+        var codeRequestResult = await _deviceCodeManager.RequestAsync(requestData, validationResult);
 
-            var validationResult = await _deviceCodeRequestValidator.ValidateAsync(requestData);
-
-            if (!validationResult.Succeeded)
-            {
-                await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, validationResult.Error, validationResult.ErrorDescription));
-                return;
-            }
-
-            var codeRequestResult = await _deviceCodeManager.RequestAsync(requestData, validationResult);
-
-            await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, codeRequestResult.ToDictionary()));
-        }
+        await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, codeRequestResult.ToDictionary()));
     }
 }

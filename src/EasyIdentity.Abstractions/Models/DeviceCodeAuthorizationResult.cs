@@ -1,7 +1,6 @@
-﻿namespace EasyIdentity.Models
+﻿namespace EasyIdentity.Models;
+
+public class DeviceCodeAuthorizationResult
 {
-    public class DeviceCodeAuthorizationResult
-    {
-        public bool Successed { get; set; }
-    }
+    public bool Successed { get; set; }
 }

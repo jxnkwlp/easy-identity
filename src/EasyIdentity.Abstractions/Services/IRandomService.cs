@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+public interface IRandomService
 {
-    public interface IRandomService
-    {
-        ValueTask<string> RandomAsync(int length, bool capital, bool lowercase, bool digital);
-    }
+    ValueTask<string> RandomAsync(int length, bool capital, bool lowercase, bool digital);
 }

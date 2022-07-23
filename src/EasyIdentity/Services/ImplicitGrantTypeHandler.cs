@@ -2,38 +2,37 @@
 using System.Threading.Tasks;
 using EasyIdentity.Models;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+public class ImplicitGrantTypeHandler : IGrantTypeHandler
 {
-    public class ImplicitGrantTypeHandler : IGrantTypeHandler
+    public string GrantType => GrantTypesConsts.Implicit;
+
+    private readonly IUserService _userService;
+    private readonly ITokenManager _tokenManager;
+
+    public ImplicitGrantTypeHandler(IUserService userService, ITokenManager tokenManager)
     {
-        public string GrantType => GrantTypesConsts.Implicit;
+        _userService = userService;
+        _tokenManager = tokenManager;
+    }
 
-        private readonly IUserService _userService;
-        private readonly ITokenManager _tokenManager;
+    public async Task<GrantTypeHandledResult> HandleAsync(GrantTypeHandleRequest request)
+    {
+        var client = request.Client;
+        var subject = request.Subject;
 
-        public ImplicitGrantTypeHandler(IUserService userService, ITokenManager tokenManager)
+        var userProfile = await _userService.GetProfileAsync(new UserProfileRequest(client, subject, request.Data));
+
+        if (userProfile.Locked)
         {
-            _userService = userService;
-            _tokenManager = tokenManager;
+            return GrantTypeHandledResult.Fail(new Exception("access_denied"));
         }
 
-        public async Task<GrantTypeHandledResult> HandleAsync(GrantTypeHandleRequest request)
-        {
-            var client = request.Client;
-            var subject = request.Subject;
+        var token = await _tokenManager.CreateAsync(subject, client, userProfile.Principal);
 
-            var userProfile = await _userService.GetProfileAsync(new UserProfileRequest(client, subject, request.Data));
+        string url = $"{request.Data.RedirectUri}?#access_token={token.AccessToken}&token_type=Bearer&scope={string.Join(" ", client.Scopes)}&state={request.Data.State}&expires_in={(int)token.TokenDescriptor.Lifetime.TotalSeconds}";
 
-            if (userProfile.Locked)
-            {
-                return GrantTypeHandledResult.Fail(new Exception("access_denied"));
-            }
-
-            var token = await _tokenManager.CreateAsync(subject, client, userProfile.Principal);
-
-            string url = $"{request.Data.RedirectUri}?#access_token={token.AccessToken}&token_type=Bearer&scope={string.Join(" ", client.Scopes)}&state={request.Data.State}&expires_in={(int)token.TokenDescriptor.Lifetime.TotalSeconds}";
-
-            return GrantTypeHandledResult.Success(url);
-        }
+        return GrantTypeHandledResult.Success(url);
     }
 }

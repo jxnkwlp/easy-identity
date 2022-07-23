@@ -4,54 +4,53 @@ using System.Threading.Tasks;
 using EasyIdentity.Models;
 using EasyIdentity.Stores;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+public class AuthorizationRequestValidator : IAuthorizationRequestValidator
 {
-    public class AuthorizationRequestValidator : IAuthorizationRequestValidator
+    private readonly IClientStore _clientStore;
+
+    public AuthorizationRequestValidator(IClientStore clientStore)
     {
-        private readonly IClientStore _clientStore;
+        _clientStore = clientStore;
+    }
 
-        public AuthorizationRequestValidator(IClientStore clientStore)
+    public async Task<RequestValidationResult> ValidateAsync(RequestData requestData)
+    {
+        var grantType = requestData.GrantType;
+        var clientId = requestData.ClientId;
+        var scope = requestData.Scope;
+        var code = requestData.Code;
+        var redirectUri = requestData.RedirectUri;
+        var responseType = requestData.ResponseType;
+
+        if (string.IsNullOrEmpty(scope))
         {
-            _clientStore = clientStore;
+            return RequestValidationResult.Fail("invalid_request");
         }
 
-        public async Task<RequestValidationResult> ValidateAsync(RequestData requestData)
+        var client = await _clientStore.FindClientAsync(clientId);
+
+        if (client == null)
+            return RequestValidationResult.Fail("invalid_scope", "Invalid scope.");
+
+        //if (scope.Split(" ").Except(client.Scopes).Count() > 0)
+        //    return RequestValidationResult.Fail("invalid_scope", "Invalid scope.");
+
+        //if (client.RedirectUrls?.Contains(redirectUri) == false)
+        //    return RequestValidationResult.Fail("invalid_scope", "Invalid scope.");
+
+        if (responseType != "code" && responseType != "token")
         {
-            var grantType = requestData.GrantType;
-            var clientId = requestData.ClientId;
-            var scope = requestData.Scope;
-            var code = requestData.Code;
-            var redirectUri = requestData.RedirectUri;
-            var responseType = requestData.ResponseType;
-
-            if (string.IsNullOrEmpty(scope))
-            {
-                return RequestValidationResult.Fail("invalid_request");
-            }
-
-            var client = await _clientStore.FindClientAsync(clientId);
-
-            if (client == null)
-                return RequestValidationResult.Fail("invalid_scope", "Invalid scope.");
-
-            //if (scope.Split(" ").Except(client.Scopes).Count() > 0)
-            //    return RequestValidationResult.Fail("invalid_scope", "Invalid scope.");
-
-            //if (client.RedirectUrls?.Contains(redirectUri) == false)
-            //    return RequestValidationResult.Fail("invalid_scope", "Invalid scope.");
-
-            if (responseType != "code" && responseType != "token")
-            {
-                // TODO 
-            }
-
-            if (responseType == "code" && !client.GrantTypes.Contains(GrantTypesConsts.AuthorizationCode))
-                return RequestValidationResult.Fail("invalid_request", "");
-
-            if (responseType == "token" && !client.GrantTypes.Contains(GrantTypesConsts.Implicit))
-                return RequestValidationResult.Fail("invalid_request", "");
-
-            return RequestValidationResult.Success(client, requestData);
+            // TODO 
         }
+
+        if (responseType == "code" && !client.GrantTypes.Contains(GrantTypesConsts.AuthorizationCode))
+            return RequestValidationResult.Fail("invalid_request", "");
+
+        if (responseType == "token" && !client.GrantTypes.Contains(GrantTypesConsts.Implicit))
+            return RequestValidationResult.Fail("invalid_request", "");
+
+        return RequestValidationResult.Success(client, requestData);
     }
 }

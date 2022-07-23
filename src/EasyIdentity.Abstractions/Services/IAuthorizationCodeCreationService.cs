@@ -2,10 +2,9 @@
 using System.Threading.Tasks;
 using EasyIdentity.Models;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+public interface IAuthorizationCodeCreationService
 {
-    public interface IAuthorizationCodeCreationService
-    {
-        Task<string> CreateAsync(Client client, ClaimsPrincipal principal);
-    }
+    Task<string> CreateAsync(Client client, ClaimsPrincipal principal);
 }

@@ -2,10 +2,9 @@
 using System.Threading.Tasks;
 using EasyIdentity.Models;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+public interface IClientCredentialsIdentityCreationService
 {
-    public interface IClientCredentialsIdentityCreationService
-    {
-        Task<ClaimsPrincipal> CreateAsync(Client client);
-    }
+    Task<ClaimsPrincipal> CreateAsync(Client client);
 }

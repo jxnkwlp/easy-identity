@@ -2,12 +2,11 @@
 using System.Threading.Tasks;
 using EasyIdentity.Models;
 
-namespace EasyIdentity.Services
-{
-    public interface IAuthorizationCodeManager
-    {
-        Task<string> GetSubjectAsync(string code);
+namespace EasyIdentity.Services;
 
-        Task<string> CreateCodeAsync(Client client, ClaimsPrincipal claimsPrincipal);
-    }
+public interface IAuthorizationCodeManager
+{
+    Task<string> GetSubjectAsync(string code);
+
+    Task<string> CreateCodeAsync(Client client, ClaimsPrincipal claimsPrincipal);
 }

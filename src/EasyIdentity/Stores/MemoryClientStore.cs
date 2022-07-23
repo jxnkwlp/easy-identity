@@ -3,18 +3,17 @@ using System.Linq;
 using System.Threading.Tasks;
 using EasyIdentity.Models;
 
-namespace EasyIdentity.Stores
+namespace EasyIdentity.Stores;
+
+public class MemoryClientStore : IClientStore
 {
-    public class MemoryClientStore : IClientStore
+    public static List<Client> Clients { get; } = new();
+
+    public Task<Client> FindClientAsync(string clientId)
     {
-        public static List<Client> Clients { get; } = new();
+        var find = Clients.FirstOrDefault(x => x.ClientId == clientId);
 
-        public Task<Client> FindClientAsync(string clientId)
-        {
-            var find = Clients.FirstOrDefault(x => x.ClientId == clientId);
-
-            return Task.FromResult(find);
-        }
-
+        return Task.FromResult(find);
     }
+
 }

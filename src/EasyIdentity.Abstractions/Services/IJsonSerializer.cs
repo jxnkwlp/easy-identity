@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace EasyIdentity.Services
+namespace EasyIdentity.Services;
+
+public interface IJsonSerializer
 {
-    public interface IJsonSerializer
-    {
-        Task<string> SerializeAsync<T>(T data);
-    }
+    Task<string> SerializeAsync<T>(T data);
 }
