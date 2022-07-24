@@ -12,9 +12,9 @@ public class DeviceCodeGrantTypeHandler : IGrantTypeHandler
     private readonly ILogger<DeviceCodeGrantTypeHandler> _logger;
     private readonly IUserService _userService;
     private readonly ITokenManager _tokenManager;
-    private readonly IDeviceCodeManager _deviceCodeManager;
+    private readonly IDeviceCodeFlowManager _deviceCodeManager;
 
-    public DeviceCodeGrantTypeHandler(ILogger<DeviceCodeGrantTypeHandler> logger, IUserService userService, ITokenManager tokenManager, IDeviceCodeManager deviceCodeManager)
+    public DeviceCodeGrantTypeHandler(ILogger<DeviceCodeGrantTypeHandler> logger, IUserService userService, ITokenManager tokenManager, IDeviceCodeFlowManager deviceCodeManager)
     {
         _logger = logger;
         _userService = userService;

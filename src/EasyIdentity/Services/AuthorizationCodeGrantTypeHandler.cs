@@ -9,10 +9,10 @@ public class AuthorizationCodeGrantTypeHandler : IGrantTypeHandler
     public string GrantType => GrantTypesConsts.AuthorizationCode;
 
     private readonly IUserService _userService;
-    private readonly IAuthorizationCodeManager _authorizationCodeManager;
+    private readonly IAuthorizationCodeFlowManager _authorizationCodeManager;
     private readonly ITokenManager _tokenManager;
 
-    public AuthorizationCodeGrantTypeHandler(IUserService userService, IAuthorizationCodeManager authorizationCodeManager, ITokenManager tokenManager)
+    public AuthorizationCodeGrantTypeHandler(IUserService userService, IAuthorizationCodeFlowManager authorizationCodeManager, ITokenManager tokenManager)
     {
         _userService = userService;
         _authorizationCodeManager = authorizationCodeManager;
@@ -25,7 +25,7 @@ public class AuthorizationCodeGrantTypeHandler : IGrantTypeHandler
 
         var code = request.Data.Code;
 
-        var subject = await _authorizationCodeManager.GetSubjectAsync(code);
+        var subject = await _authorizationCodeManager.GetSubjectAsync(code, client);
 
         if (string.IsNullOrWhiteSpace(subject))
         {

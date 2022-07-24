@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using EasyIdentity.Models;
-using EasyIdentity.Stores;
 
 namespace EasyIdentity.Services;
 
@@ -8,11 +7,11 @@ public class ImplicitTokenRequestValidator : IGrantTypeTokenRequestValidator
 {
     public string GrantType => GrantTypesConsts.Implicit;
 
-    private readonly IClientStore _clientStore;
+    private readonly IClientManager _clientManager;
 
-    public ImplicitTokenRequestValidator(IClientStore clientStore)
+    public ImplicitTokenRequestValidator(IClientManager clientManager)
     {
-        _clientStore = clientStore;
+        _clientManager = clientManager;
     }
 
     public async Task<RequestValidationResult> ValidateAsync(RequestData requestData)
@@ -25,7 +24,7 @@ public class ImplicitTokenRequestValidator : IGrantTypeTokenRequestValidator
         if (string.IsNullOrEmpty(clientId))
             return RequestValidationResult.Fail("invalid_request");
 
-        var client = await _clientStore.FindClientAsync(clientId);
+        var client = await _clientManager.FindByClientIdAsync(clientId);
 
         if (client == null)
             return RequestValidationResult.Fail("invalid_client", "Invalid client Id.");

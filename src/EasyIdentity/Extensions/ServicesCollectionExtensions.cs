@@ -1,5 +1,6 @@
 ﻿using System;
 using EasyIdentity.Endpoints;
+using EasyIdentity.Models;
 using EasyIdentity.Services;
 using EasyIdentity.Stores;
 using Microsoft.Extensions.Configuration;
@@ -16,15 +17,13 @@ public static class ServicesCollectionExtensions
             throw new ArgumentNullException(nameof(optionSetup));
         }
 
+        var builder = new EasyIdentityBuilder(services);
+
         // depends on
         services
             .AddOptions()
             .AddLogging()
             .AddHttpContextAccessor();
-
-        var builder = new EasyIdentityBuilder(services);
-
-        services.AddSingleton((_) => builder);
 
         services.Configure(optionSetup);
 
@@ -48,10 +47,6 @@ public static class ServicesCollectionExtensions
         services.AddEasyIdentityEndpointHandler<TokenEndpointHandler>();
         services.AddEasyIdentityEndpointHandler<DeviceCodeEndpointHandler>();
 
-        // Store
-        services.AddSingleton<IClientStore, MemoryClientStore>();
-        services.AddScoped<ISigningCredentialsStore, EmptySigningCredentialsStore>();
-
         // request/response
         services.AddScoped<IRequestParamReader, RequestParamReader>();
         services.AddScoped<ITokenRequestValidator, TokenRequestValidator>();
@@ -64,6 +59,7 @@ public static class ServicesCollectionExtensions
         // common service
         services.AddScoped<IRedirectUrlValidator, RedirectUrlValidator>();
         services.AddSingleton<IJsonSerializer, DefaultJsonSerializer>();
+        services.AddSingleton<ICryptographyHelper, CryptographyHelper>();
 
         // 
         services.AddScoped<IAuthorizationInteractionService, AuthorizationInteractionService>();
@@ -85,17 +81,25 @@ public static class ServicesCollectionExtensions
         // ClientCredentials
         services.AddScoped<IClientCredentialsIdentityCreationService, ClientCredentialsIdentityCreationService>();
 
-        // AuthorizationCode
-        services.AddScoped<IAuthorizationCodeManager, AuthorizationCodeManager>();
+        // AuthorizationCode 
         services.AddScoped<IAuthorizationRequestValidator, AuthorizationRequestValidator>();
         services.AddScoped<IAuthorizationCodeCreationService, AuthorizationCodeCreationService>();
-        services.AddScoped<IAuthorizationCodeStoreService, AuthorizationCodeStoreService>();
+        // store 
+        builder.AddAuthorizationCodeService<EasyIdentityAuthorizationCode, AuthorizationCodeStore>();
 
-        // DeviceCode
-        services.AddScoped<IDeviceCodeManager, DeviceCodeManager>();
+        // DeviceCode 
         services.AddScoped<IDeviceCodeRequestValidator, DeviceCodeRequestValidator>();
         services.AddScoped<IDeviceCodeCodeCreationService, DeviceCodeCodeCreationService>();
-        services.AddScoped<IDeviceCodeStoreService, DeviceCodeStoreService>();
+        // store
+        builder.AddDeviceCodeService<EasyIdentityDeviceCode, DeviceCodeStore>();
+
+        // Store
+        services.AddScoped<IScopeManager, ScopeManager>();
+        services.AddScoped<IClientManager, ClientManager>();
+        services.AddSingleton<IClientStore, MemoryClientStore>();
+        services.AddScoped<ISigningCredentialsService, EmptySigningCredentialsService>();
+
+        services.AddSingleton((_) => builder);
 
         return builder;
     }

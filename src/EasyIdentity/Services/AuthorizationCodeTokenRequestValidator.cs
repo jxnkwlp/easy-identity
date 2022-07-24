@@ -1,24 +1,26 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using EasyIdentity.Models;
-using EasyIdentity.Stores;
 
 namespace EasyIdentity.Services;
 
-public class AuthorizationCodeTokenRequestValidator : GrantTypeTokenRequestValidator, IGrantTypeTokenRequestValidator
+public class AuthorizationCodeTokenRequestValidator : IGrantTypeTokenRequestValidator
 {
-    public override string GrantType => GrantTypesConsts.AuthorizationCode;
+    public string GrantType => GrantTypesConsts.AuthorizationCode;
 
-    private readonly IClientStore _clientStore;
+    private readonly IClientManager _clientManager;
     private readonly IRedirectUrlValidator _redirectUrlValidator;
+    private readonly IAuthorizationCodeFlowManager _authorizationCodeManager;
 
-    public AuthorizationCodeTokenRequestValidator(IClientStore clientStore, IRedirectUrlValidator redirectUrlValidator)
+    public AuthorizationCodeTokenRequestValidator(IClientManager clientManager, IRedirectUrlValidator redirectUrlValidator, IAuthorizationCodeFlowManager authorizationCodeManager)
     {
-        _clientStore = clientStore;
+        _clientManager = clientManager;
         _redirectUrlValidator = redirectUrlValidator;
+        _authorizationCodeManager = authorizationCodeManager;
     }
 
-    public override async Task<RequestValidationResult> ValidateAsync(RequestData requestData)
+    public async Task<RequestValidationResult> ValidateAsync(RequestData requestData)
     {
         var grantType = requestData.GrantType;
         var clientId = requestData.ClientId;
@@ -33,13 +35,16 @@ public class AuthorizationCodeTokenRequestValidator : GrantTypeTokenRequestValid
             return RequestValidationResult.Fail("invalid_request", "The client id is missing.");
         }
 
-        var client = await _clientStore.FindClientAsync(clientId);
+        var client = await _clientManager.FindByClientIdAsync(clientId);
 
-        if (client.ClientSecretRequired && string.IsNullOrEmpty(clientSecret))
-            return RequestValidationResult.Fail("invalid_request", "The client secret is required.");
+        if (client.ClientSecretRequired && !string.IsNullOrEmpty(client.ClientSecret))
+        {
+            if (string.IsNullOrEmpty(clientSecret))
+                return RequestValidationResult.Fail("invalid_request", "The client secret is required.");
 
-        if (client.ClientSecretRequired && client.ClientSecret != clientSecret)
-            return RequestValidationResult.Fail("invalid_client", "Invalid client secret.");
+            if (client.ClientSecret != clientSecret)
+                return RequestValidationResult.Fail("invalid_client", "Invalid client secret.");
+        }
 
         if (requestData.Scope?.Split(" ").Except(client.Scopes).Count() > 0)
             return RequestValidationResult.Fail("invalid_scope", "Invalid scope.");
@@ -55,6 +60,14 @@ public class AuthorizationCodeTokenRequestValidator : GrantTypeTokenRequestValid
 
         if (!await _redirectUrlValidator.ValidateAsync(client, redirectUri))
             return RequestValidationResult.Fail("invalid_request", "The redirect uri not match.");
+
+        // code validation
+        var codeValidationResult = await _authorizationCodeManager.ValidationAsync(code, client, requestData);
+
+        if (!codeValidationResult.Succeeded)
+        {
+            return RequestValidationResult.Fail("invalid_grant", codeValidationResult.Failure.Message);
+        }
 
         return RequestValidationResult.Success(client, requestData, grantType);
     }

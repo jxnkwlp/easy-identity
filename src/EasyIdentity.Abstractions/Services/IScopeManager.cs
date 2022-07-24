@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using EasyIdentity.Models;
 
-namespace EasyIdentity.Stores;
+namespace EasyIdentity.Services;
 
-public interface IScopeStore
+public interface IScopeManager
 {
     Task<Scope> FindByNameAsync(string name, CancellationToken cancellationToken = default);
 }

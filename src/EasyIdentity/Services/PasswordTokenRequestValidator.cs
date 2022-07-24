@@ -2,8 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using EasyIdentity.Models;
-using EasyIdentity.Stores;
-using Microsoft.AspNetCore.Http;
 
 namespace EasyIdentity.Services;
 
@@ -11,13 +9,11 @@ public class PasswordTokenRequestValidator : IGrantTypeTokenRequestValidator
 {
     public string GrantType => GrantTypesConsts.Password;
 
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IClientStore _clientStore;
+    private readonly IClientManager _clientManager;
 
-    public PasswordTokenRequestValidator(IHttpContextAccessor httpContextAccessor, IClientStore clientStore)
+    public PasswordTokenRequestValidator(IClientManager clientManager)
     {
-        _httpContextAccessor = httpContextAccessor;
-        _clientStore = clientStore;
+        _clientManager = clientManager;
     }
 
     public async Task<RequestValidationResult> ValidateAsync(RequestData requestData)
@@ -35,7 +31,7 @@ public class PasswordTokenRequestValidator : IGrantTypeTokenRequestValidator
             return RequestValidationResult.Fail("invalid_request");
         }
 
-        var client = await _clientStore.FindClientAsync(clientId);
+        var client = await _clientManager.FindByClientIdAsync(clientId);
 
         if (client == null)
             return RequestValidationResult.Fail("invalid_client", "Invalid client Id.");

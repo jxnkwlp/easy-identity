@@ -13,10 +13,10 @@ public class DeviceCodeEndpointHandler : IEndpointHandler
 
     private readonly IRequestParamReader _requestParamReader;
     private readonly IDeviceCodeRequestValidator _deviceCodeRequestValidator;
-    private readonly IDeviceCodeManager _deviceCodeManager;
+    private readonly IDeviceCodeFlowManager _deviceCodeManager;
     private readonly IResponseWriter _responseWriter;
 
-    public DeviceCodeEndpointHandler(IRequestParamReader requestParamReader, IDeviceCodeRequestValidator deviceCodeRequestValidator, IDeviceCodeManager deviceCodeManager, IResponseWriter responseWriter)
+    public DeviceCodeEndpointHandler(IRequestParamReader requestParamReader, IDeviceCodeRequestValidator deviceCodeRequestValidator, IDeviceCodeFlowManager deviceCodeManager, IResponseWriter responseWriter)
     {
         _requestParamReader = requestParamReader;
         _deviceCodeRequestValidator = deviceCodeRequestValidator;

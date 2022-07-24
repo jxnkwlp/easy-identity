@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using EasyIdentity.Models;
 using Microsoft.AspNetCore.Http;
 
@@ -16,6 +18,7 @@ public class ResponseWriter : IResponseWriter
     public async Task WriteAsync(ResponseDescriptor descriptor)
     {
         var context = _httpContextAccessor.HttpContext;
+        var request = context.Request;
         var response = context.Response;
 
 #if NET6_0_OR_GREATER
@@ -26,6 +29,8 @@ public class ResponseWriter : IResponseWriter
 
         // TODO: response.HasStarted
 
+        var responseMode = descriptor.RequestData.ResponseMode;
+
         if (!descriptor.Succeeded)
         {
             response.StatusCode = 400;
@@ -34,6 +39,8 @@ public class ResponseWriter : IResponseWriter
             {
                 error = descriptor.Error,
                 error_description = descriptor.ErrorDescription,
+                timestamp = DateTime.UtcNow.ToString("u"),
+                trace_id = Activity.Current?.Id ?? context.TraceIdentifier
             });
 
             return;

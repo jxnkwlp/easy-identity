@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EasyIdentity.Services;
@@ -12,5 +13,5 @@ public interface IAuthorizationInteractionService
     ///  grant or reject when input user code on device code flow 
     /// </summary> 
     /// <returns>the action success or failed</returns>
-    Task<bool> DeviceUserCodeAuthorizationAsync(string userCode, ClaimsPrincipal claimsPrincipal, bool grant);
+    Task<bool> DeviceUserCodeAuthorizationAsync(string userCode, ClaimsPrincipal claimsPrincipal, bool grant, CancellationToken cancellationToken = default);
 }

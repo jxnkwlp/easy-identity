@@ -26,9 +26,9 @@ public class AuthorizationEndpointHandler : IEndpointHandler
     private readonly IResponseWriter _responseWriter;
 
     private readonly IAuthorizationRequestValidator _authorizationRequestValidator;
-    private readonly IAuthorizationCodeManager _authorizationCodeManager;
+    private readonly IAuthorizationCodeFlowManager _authorizationCodeManager;
 
-    public AuthorizationEndpointHandler(IOptions<EasyIdentityOptions> easyIdentityOptions, IRequestParamReader requestParamReader, IEnumerable<IGrantTypeHandler> grantTypeHandlers, ITokenRequestValidator tokenRequestValidator, IResponseWriter responseWriter, IAuthorizationRequestValidator authorizationRequestValidator, IAuthorizationCodeManager authorizationCodeManager)
+    public AuthorizationEndpointHandler(IOptions<EasyIdentityOptions> easyIdentityOptions, IRequestParamReader requestParamReader, IEnumerable<IGrantTypeHandler> grantTypeHandlers, ITokenRequestValidator tokenRequestValidator, IResponseWriter responseWriter, IAuthorizationRequestValidator authorizationRequestValidator, IAuthorizationCodeFlowManager authorizationCodeManager)
     {
         _easyIdentityOptions = easyIdentityOptions.Value;
         _requestParamReader = requestParamReader;
@@ -55,13 +55,13 @@ public class AuthorizationEndpointHandler : IEndpointHandler
 
         if (result.Succeeded)
         {
-            var responseType = requestData.ResponseType;
+            var responseTypes = requestData.ResponseType.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
-            if (responseType == "code")
+            if (responseTypes.Contains("code"))
             {
                 await AuthorizationCodeFlowAsync(context, requestData, validationResult.Client, result);
             }
-            else if (responseType == "token")
+            else if (responseTypes.Contains("token"))
             {
                 await ImplicitFlowAsync(context, requestData, result);
             }
@@ -78,7 +78,7 @@ public class AuthorizationEndpointHandler : IEndpointHandler
 
     private async Task AuthorizationCodeFlowAsync(HttpContext httpContext, RequestData requestData, Client client, AuthenticateResult result)
     {
-        var code = await _authorizationCodeManager.CreateCodeAsync(client, result.Principal);
+        var code = await _authorizationCodeManager.CreateCodeAsync(client, result.Principal, requestData);
 
         await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, $"{requestData.RedirectUri}?code={code}&state={requestData.State}"));
     }

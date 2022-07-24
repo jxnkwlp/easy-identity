@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using EasyIdentity.Models;
-using EasyIdentity.Stores;
 using Microsoft.AspNetCore.Http;
 
 namespace EasyIdentity.Services;
@@ -10,14 +9,13 @@ public class ClientCredentialsTokenRequestValidator : GrantTypeTokenRequestValid
     public override string GrantType => GrantTypesConsts.ClientCredentials;
 
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IClientStore _clientStore;
+    private readonly IClientManager _clientManager;
 
-    public ClientCredentialsTokenRequestValidator(IHttpContextAccessor httpContextAccessor, IClientStore clientStore)
+    public ClientCredentialsTokenRequestValidator(IHttpContextAccessor httpContextAccessor, IClientManager clientManager)
     {
         _httpContextAccessor = httpContextAccessor;
-        _clientStore = clientStore;
+        _clientManager = clientManager;
     }
-
 
     public override async Task<RequestValidationResult> ValidateAsync(RequestData requestData)
     {
@@ -32,7 +30,7 @@ public class ClientCredentialsTokenRequestValidator : GrantTypeTokenRequestValid
             return RequestValidationResult.Fail("invalid_request", "Client id missing.");
         }
 
-        var client = await _clientStore.FindClientAsync(clientId);
+        var client = await _clientManager.FindByClientIdAsync(clientId);
 
         var result = ValidateClient(client, requestData);
 

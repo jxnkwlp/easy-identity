@@ -16,9 +16,9 @@ namespace EasyIdentity.Services;
 public class JwtTokenCreationService : ITokenCreationService
 {
     private readonly EasyIdentityOptions _options;
-    protected readonly ISigningCredentialsStore _signingCredentialsStore;
+    protected readonly ISigningCredentialsService _signingCredentialsStore;
 
-    public JwtTokenCreationService(IOptions<EasyIdentityOptions> options, ISigningCredentialsStore signingCredentialsStore)
+    public JwtTokenCreationService(IOptions<EasyIdentityOptions> options, ISigningCredentialsService signingCredentialsStore)
     {
         _options = options.Value;
         _signingCredentialsStore = signingCredentialsStore;

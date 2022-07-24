@@ -25,6 +25,7 @@ public class TokenDescriptor
     public string TokenName { get; set; }
     public string Issuer { get; set; }
     public string Audiences { get; set; }
+    public string Scope { get; set; }
     public TimeSpan Lifetime { get; set; }
     public DateTime CreationTime { get; set; }
 }

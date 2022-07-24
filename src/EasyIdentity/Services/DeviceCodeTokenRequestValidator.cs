@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using EasyIdentity.Models;
-using EasyIdentity.Stores;
 
 namespace EasyIdentity.Services;
 
@@ -10,11 +9,11 @@ public class DeviceCodeTokenRequestValidator : IGrantTypeTokenRequestValidator
 {
     public string GrantType => GrantTypesConsts.DeviceCode;
 
-    private readonly IClientStore _clientStore;
+    private readonly IClientManager _clientManager;
 
-    public DeviceCodeTokenRequestValidator(IClientStore clientStore)
+    public DeviceCodeTokenRequestValidator(IClientManager clientManager)
     {
-        _clientStore = clientStore;
+        _clientManager = clientManager;
     }
 
     public async Task<RequestValidationResult> ValidateAsync(RequestData data)
@@ -26,7 +25,7 @@ public class DeviceCodeTokenRequestValidator : IGrantTypeTokenRequestValidator
         if (string.IsNullOrEmpty(clientId))
             return RequestValidationResult.Fail("invalid_request");
 
-        var client = await _clientStore.FindClientAsync(clientId);
+        var client = await _clientManager.FindByClientIdAsync(clientId);
 
         if (client == null)
             return RequestValidationResult.Fail("invalid_client", "Invalid client Id.");

@@ -2,17 +2,16 @@
 using System.Linq;
 using System.Threading.Tasks;
 using EasyIdentity.Models;
-using EasyIdentity.Stores;
 
 namespace EasyIdentity.Services;
 
 public class AuthorizationRequestValidator : IAuthorizationRequestValidator
 {
-    private readonly IClientStore _clientStore;
+    private readonly IClientManager _clientManager;
 
-    public AuthorizationRequestValidator(IClientStore clientStore)
+    public AuthorizationRequestValidator(IClientManager clientManager)
     {
-        _clientStore = clientStore;
+        _clientManager = clientManager;
     }
 
     public async Task<RequestValidationResult> ValidateAsync(RequestData requestData)
@@ -29,10 +28,10 @@ public class AuthorizationRequestValidator : IAuthorizationRequestValidator
             return RequestValidationResult.Fail("invalid_request");
         }
 
-        var client = await _clientStore.FindClientAsync(clientId);
+        var client = await _clientManager.FindByClientIdAsync(clientId);
 
         if (client == null)
-            return RequestValidationResult.Fail("invalid_scope", "Invalid scope.");
+            return RequestValidationResult.Fail("invali_client", "Invalid client.");
 
         //if (scope.Split(" ").Except(client.Scopes).Count() > 0)
         //    return RequestValidationResult.Fail("invalid_scope", "Invalid scope.");

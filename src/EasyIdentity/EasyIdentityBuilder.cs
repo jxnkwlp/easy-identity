@@ -41,13 +41,33 @@ public class EasyIdentityBuilder
 
     public EasyIdentityBuilder AddDevelopmentECDsaSigningCredentialsStore()
     {
-        Services.AddTransient<ISigningCredentialsStore, DevelopmentECDsaSigningCredentialsStore>();
+        Services.AddTransient<ISigningCredentialsService, DevelopmentECDsaSigningCredentialsService>();
         return this;
     }
 
     public EasyIdentityBuilder AddDevelopmentRSASigningCredentialsStore()
     {
-        Services.AddTransient<ISigningCredentialsStore, DevelopmentRSASigningCredentialsStore>();
+        Services.AddTransient<ISigningCredentialsService, DevelopmentRSASigningCredentialsService>();
+        return this;
+    }
+
+    public EasyIdentityBuilder AddAuthorizationCodeService<TAuthorizationCode, TAuthorizationCodeStoreImplementation>()
+        where TAuthorizationCodeStoreImplementation : class, IAuthorizationCodeStore<TAuthorizationCode>
+        where TAuthorizationCode : class, new()
+    {
+        Services.AddScoped<IAuthorizationCodeStore<TAuthorizationCode>, TAuthorizationCodeStoreImplementation>();
+        Services.AddScoped<IAuthorizationCodeFlowManager, AuthorizationCodeFlowManager<TAuthorizationCode>>();
+
+        return this;
+    }
+
+    public EasyIdentityBuilder AddDeviceCodeService<TDeviceCode, TDeviceCodeStoreImplementation>()
+        where TDeviceCodeStoreImplementation : class, IDeviceCodeStore<TDeviceCode>
+        where TDeviceCode : class, new()
+    {
+        Services.AddScoped<IDeviceCodeStore<TDeviceCode>, TDeviceCodeStoreImplementation>();
+        Services.AddScoped<IDeviceCodeFlowManager, DeviceCodeFlowManager<TDeviceCode>>();
+
         return this;
     }
 }
