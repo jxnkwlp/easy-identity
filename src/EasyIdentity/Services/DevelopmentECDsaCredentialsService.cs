@@ -8,8 +8,13 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace EasyIdentity.Services;
 
-public class DevelopmentECDsaSigningCredentialsService : ISigningCredentialsService
+public class DevelopmentECDsaCredentialsService : ICredentialsService
 {
+    public Task<List<EncryptingCredentials>> GetEncryptingCredentialsAsync(Client client = null, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<SigningCredentials>> GetSigningCredentialsAsync(Client client = null, CancellationToken cancellationToken = default)
     {
         var ecdSecurityKey = new ECDsaSecurityKey(ECDsa.Create(ECCurve.NamedCurves.nistP256)) { KeyId = Guid.NewGuid().ToString("N") };

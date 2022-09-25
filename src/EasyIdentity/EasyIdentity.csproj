@@ -9,7 +9,7 @@
     <ItemGroup>
         <ProjectReference Include="..\EasyIdentity.Abstractions\EasyIdentity.Abstractions.csproj" />
     </ItemGroup>
- 
+
     <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
@@ -17,13 +17,14 @@
     <ItemGroup Condition=" '$(TargetFramework)' == 'net5.0' ">
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
-     
+
     <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
-     
+
     <ItemGroup>
         <!--<PackageReference Include="IdentityModel" Version="6.0.0" />-->
+        <PackageReference Include="ConfigureAwait.Fody" Version="3.3.1" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.18.0" />
     </ItemGroup>
 

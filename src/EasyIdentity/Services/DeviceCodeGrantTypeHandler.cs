@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using EasyIdentity.Models;
 using Microsoft.Extensions.Logging;
@@ -7,7 +8,7 @@ namespace EasyIdentity.Services;
 
 public class DeviceCodeGrantTypeHandler : IGrantTypeHandler
 {
-    public string GrantType => GrantTypesConsts.DeviceCode;
+    public string GrantType => GrantTypeNameConsts.DeviceCode;
 
     private readonly ILogger<DeviceCodeGrantTypeHandler> _logger;
     private readonly IUserService _userService;
@@ -22,10 +23,10 @@ public class DeviceCodeGrantTypeHandler : IGrantTypeHandler
         _deviceCodeManager = deviceCodeManager;
     }
 
-    public async Task<GrantTypeHandledResult> HandleAsync(GrantTypeHandleRequest request)
+    public async Task<GrantTypeExecutionResult> ExecuteAsync(GrantTypeExecutionRequest request, CancellationToken cancellationToken = default)
     {
         var client = request.Client;
-
+        var scopes = request.Data.Scopes;
         var deviceCode = request.Data.DeviceCode;
 
         // TODO: check request is too fast
@@ -34,39 +35,32 @@ public class DeviceCodeGrantTypeHandler : IGrantTypeHandler
         if (!await _deviceCodeManager.ValidateDeviceCodeAsync(deviceCode, request.Client))
         {
             _logger.LogDebug($"The device code '{deviceCode}' request validate result: false");
-            return GrantTypeHandledResult.Fail(new Exception("expired_token"));
+            return GrantTypeExecutionResult.Fail(new Exception("expired_token"));
         }
 
         var subject = await _deviceCodeManager.FindSubjectAsync(deviceCode, request.Client);
 
         if (string.IsNullOrWhiteSpace(subject))
         {
-            return GrantTypeHandledResult.Fail(new Exception("authorization_pending"));
+            return GrantTypeExecutionResult.Fail(new Exception("authorization_pending"));
         }
 
         var isGranted = await _deviceCodeManager.CheckGrantedAsync(deviceCode, request.Client);
 
         if (!isGranted)
         {
-            return GrantTypeHandledResult.Fail(new Exception("authorization_declined"));
+            return GrantTypeExecutionResult.Fail(new Exception("authorization_declined"));
         }
 
         var userProfile = await _userService.GetProfileAsync(new UserProfileRequest(client, subject, request.Data));
 
         if (userProfile.Locked)
         {
-            return GrantTypeHandledResult.Fail(new Exception("access_denied"));
+            return GrantTypeExecutionResult.Fail(new Exception("access_denied"));
         }
 
-        var token = await _tokenManager.CreateAsync(subject, client, userProfile.Principal);
+        var token = await _tokenManager.CreateAsync(client, scopes, subject, userProfile.Principal,request.Data);
 
-        return GrantTypeHandledResult.Success(new TokenData
-        {
-            AccessToken = token.AccessToken,
-            RefreshToken = token.RefreshToken,
-            Scope = string.Join(" ", client.Scopes),
-            ExpiresIn = (int)token.TokenDescriptor.Lifetime.TotalSeconds,
-            TokenType = token.TokenDescriptor.TokenType,
-        });
+        return GrantTypeExecutionResult.Success(token);
     }
 }

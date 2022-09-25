@@ -10,6 +10,8 @@ public class EasyIdentityOptions
 
     public string Issuer { get; set; }
 
+    public bool EncryptAccessToken { get; set; }
+
     public TimeSpan DefaultAccessTokenLifetime { get; set; } = TimeSpan.FromMinutes(10);
     public TimeSpan DefaultRefreshTokenLifetime { get; set; } = TimeSpan.FromDays(30);
     public TimeSpan DefaultIdentityTokenLifetime { get; set; } = TimeSpan.FromMinutes(10);

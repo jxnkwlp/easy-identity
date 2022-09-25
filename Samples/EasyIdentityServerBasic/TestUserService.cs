@@ -6,7 +6,7 @@ namespace EasyIdentityServerBasic;
 
 public class TestUserService : IUserService
 {
-    public Task<UserProfileResult> GetProfileAsync(UserProfileRequest request)
+    public Task<UserProfileResult> GetProfileAsync(UserProfileRequest request, CancellationToken cancellationToken = default)
     {
         var claims = new List<Claim>() {
                 new Claim(ClaimTypes.NameIdentifier, "1"),
@@ -20,7 +20,7 @@ public class TestUserService : IUserService
         return Task.FromResult(UserProfileResult.Success("1", new ClaimsPrincipal(identity)));
     }
 
-    public Task<string> GetSubjectAsync(string username, string password, RequestData requestData)
+    public Task<string> GetSubjectAsync(string username, string password, RequestData requestData, CancellationToken cancellationToken = default)
     {
         if (username == "bob")
             return Task.FromResult("1");

@@ -7,7 +7,7 @@ namespace EasyIdentity.Services;
 
 public class DeviceCodeTokenRequestValidator : IGrantTypeTokenRequestValidator
 {
-    public string GrantType => GrantTypesConsts.DeviceCode;
+    public string GrantType => GrantTypeNameConsts.DeviceCode;
 
     private readonly IClientManager _clientManager;
 

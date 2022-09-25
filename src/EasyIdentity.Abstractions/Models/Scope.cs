@@ -1,4 +1,6 @@
-﻿namespace EasyIdentity.Models;
+﻿using System;
+
+namespace EasyIdentity.Models;
 
 public class Scope
 {

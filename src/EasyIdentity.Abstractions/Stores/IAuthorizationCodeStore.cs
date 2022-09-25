@@ -29,4 +29,6 @@ public interface IAuthorizationCodeStore<TAuthorizationCode> where TAuthorizatio
 
     Task<string> GetCodeChallengeMethodAsync(TAuthorizationCode authorizationCode, CancellationToken cancellationToken = default);
 
+    Task<string[]> GetScopesAsync(TAuthorizationCode authorizationCode, CancellationToken cancellationToken = default);
+
 }

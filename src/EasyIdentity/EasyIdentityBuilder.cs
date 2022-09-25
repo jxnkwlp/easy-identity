@@ -14,6 +14,48 @@ public class EasyIdentityBuilder
         Services = services;
     }
 
+    public EasyIdentityBuilder DisableAuthorizationCodeFlow()
+    {
+        // TODO
+        return this;
+    }
+
+    public EasyIdentityBuilder DisableDeviceCodeFlowFlow()
+    {
+        // TODO
+        return this;
+    }
+
+    public EasyIdentityBuilder DisableClientCredentialsFlow()
+    {
+        // TODO
+        return this;
+    }
+
+    public EasyIdentityBuilder DisablePasswordFlow()
+    {
+        // TODO
+        return this;
+    }
+
+    public EasyIdentityBuilder DisableRefreshTokenFlow()
+    {
+        // TODO
+        return this;
+    }
+
+    public EasyIdentityBuilder DisableImplicitFlow()
+    {
+        // TODO
+        return this;
+    }
+
+    public EasyIdentityBuilder DisableCibaFlow()
+    {
+        // TODO
+        return this;
+    }
+
     public EasyIdentityBuilder AddClient(Client client)
     {
         MemoryClientStore.Clients.Add(client);
@@ -33,21 +75,27 @@ public class EasyIdentityBuilder
         return this;
     }
 
-    public EasyIdentityBuilder AddUserProfileService<TProfileService>() where TProfileService : class, IUserService
+    public EasyIdentityBuilder AddUserService<TUserService>() where TUserService : class, IUserService
     {
-        Services.AddScoped<IUserService, TProfileService>();
+        Services.AddScoped<IUserService, TUserService>();
         return this;
     }
 
-    public EasyIdentityBuilder AddDevelopmentECDsaSigningCredentialsStore()
+    public EasyIdentityBuilder AddDevelopmentECDsaCredentialsStore()
     {
-        Services.AddTransient<ISigningCredentialsService, DevelopmentECDsaSigningCredentialsService>();
+        Services.AddTransient<ICredentialsService, DevelopmentECDsaCredentialsService>();
         return this;
     }
 
-    public EasyIdentityBuilder AddDevelopmentRSASigningCredentialsStore()
+    public EasyIdentityBuilder AddDevelopmentRSACredentialsStore()
     {
-        Services.AddTransient<ISigningCredentialsService, DevelopmentRSASigningCredentialsService>();
+        Services.AddTransient<ICredentialsService, DevelopmentRSACredentialsService>();
+        return this;
+    }
+
+    public EasyIdentityBuilder AddCredentialsStore<TStore>() where TStore : class, ICredentialsService
+    {
+        Services.AddTransient<ICredentialsService, TStore>();
         return this;
     }
 
@@ -70,4 +118,15 @@ public class EasyIdentityBuilder
 
         return this;
     }
+
+    public EasyIdentityBuilder AddTokenService<TToken, TTokenStoreImplementation>()
+        where TTokenStoreImplementation : class, ITokenStore<TToken>
+        where TToken : class, new()
+    {
+        Services.AddScoped<ITokenStore<TToken>, TTokenStoreImplementation>();
+        Services.AddScoped<ITokenManager, TokenManager<TToken>>();
+
+        return this;
+    }
+
 }

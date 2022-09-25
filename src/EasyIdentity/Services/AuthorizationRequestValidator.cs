@@ -44,10 +44,10 @@ public class AuthorizationRequestValidator : IAuthorizationRequestValidator
             // TODO 
         }
 
-        if (responseType == "code" && !client.GrantTypes.Contains(GrantTypesConsts.AuthorizationCode))
+        if (responseType == "code" && !client.GrantTypes.Contains(GrantTypeNameConsts.AuthorizationCode))
             return RequestValidationResult.Fail("invalid_request", "");
 
-        if (responseType == "token" && !client.GrantTypes.Contains(GrantTypesConsts.Implicit))
+        if (responseType == "token" && !client.GrantTypes.Contains(GrantTypeNameConsts.Implicit))
             return RequestValidationResult.Fail("invalid_request", "");
 
         return RequestValidationResult.Success(client, requestData);

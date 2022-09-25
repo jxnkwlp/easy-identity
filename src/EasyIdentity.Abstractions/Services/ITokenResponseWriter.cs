@@ -8,5 +8,5 @@ namespace EasyIdentity.Services;
 [Obsolete]
 public interface ITokenResponseWriter
 {
-    Task WriteAsync(HttpContext context, GrantTypeHandledResult result);
+    Task WriteAsync(HttpContext context, GrantTypeExecutionResult result);
 }

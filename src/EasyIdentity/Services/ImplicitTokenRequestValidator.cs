@@ -5,7 +5,7 @@ namespace EasyIdentity.Services;
 
 public class ImplicitTokenRequestValidator : IGrantTypeTokenRequestValidator
 {
-    public string GrantType => GrantTypesConsts.Implicit;
+    public string GrantType => GrantTypeNameConsts.Implicit;
 
     private readonly IClientManager _clientManager;
 

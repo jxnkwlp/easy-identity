@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using EasyIdentity.Models;
 
 namespace EasyIdentity.Services;
@@ -8,7 +9,7 @@ namespace EasyIdentity.Services;
 /// </summary>
 public interface IUserService
 {
-    Task<UserProfileResult> GetProfileAsync(UserProfileRequest request);
+    Task<UserProfileResult> GetProfileAsync(UserProfileRequest request,CancellationToken cancellationToken=default );
 
-    Task<string> GetSubjectAsync(string username, string password, RequestData requestData);
+    Task<string> GetSubjectAsync(string username, string password, RequestData requestData, CancellationToken cancellationToken = default);
 }

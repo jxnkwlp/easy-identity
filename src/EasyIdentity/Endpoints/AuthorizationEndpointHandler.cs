@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using EasyIdentity.Extensions;
 using EasyIdentity.Models;
 using EasyIdentity.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -57,11 +58,11 @@ public class AuthorizationEndpointHandler : IEndpointHandler
         {
             var responseTypes = requestData.ResponseType.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
-            if (responseTypes.Contains("code"))
+            if (responseTypes.Length == 1 && responseTypes[0] == "code")
             {
                 await AuthorizationCodeFlowAsync(context, requestData, validationResult.Client, result);
             }
-            else if (responseTypes.Contains("token"))
+            else if (responseTypes.Contains("token") || responseTypes.Contains("id_token"))
             {
                 await ImplicitFlowAsync(context, requestData, result);
             }
@@ -78,14 +79,23 @@ public class AuthorizationEndpointHandler : IEndpointHandler
 
     private async Task AuthorizationCodeFlowAsync(HttpContext httpContext, RequestData requestData, Client client, AuthenticateResult result)
     {
-        var code = await _authorizationCodeManager.CreateCodeAsync(client, result.Principal, requestData);
+        if (!client.GrantTypes.Contains(GrantTypeNameConsts.AuthorizationCode))
+        {
+            await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, "invaid_grant_type"));
+        }
+        else
+        {
+            var subject = result.Principal.GetSubject();
 
-        await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, $"{requestData.RedirectUri}?code={code}&state={requestData.State}"));
+            var code = await _authorizationCodeManager.CreateCodeAsync(client, requestData.Scopes, subject, result.Principal, requestData);
+
+            await _responseWriter.WriteAsync(new ResponseDescriptor(requestData, $"{requestData.RedirectUri}?code={code}&state={requestData.State}"));
+        }
     }
 
     private async Task ImplicitFlowAsync(HttpContext httpContext, RequestData requestData, AuthenticateResult authenticateResult)
     {
-        var validationResult = await _tokenRequestValidator.ValidateAsync(GrantTypesConsts.Implicit, requestData);
+        var validationResult = await _tokenRequestValidator.ValidateAsync(GrantTypeNameConsts.Implicit, requestData);
 
         if (!validationResult.Succeeded)
         {
@@ -93,7 +103,7 @@ public class AuthorizationEndpointHandler : IEndpointHandler
             return;
         }
 
-        var grantTypeHandler = _grantTypeHandlers.FirstOrDefault(x => x.GrantType == GrantTypesConsts.Implicit);
+        var grantTypeHandler = _grantTypeHandlers.FirstOrDefault(x => x.GrantType == GrantTypeNameConsts.Implicit);
 
         if (grantTypeHandler == null)
             throw new Exception($"The grant type '{validationResult.GrantType}' is not supported");
@@ -105,7 +115,7 @@ public class AuthorizationEndpointHandler : IEndpointHandler
             throw new Exception("The user identifiter not found.");
         }
 
-        var result = await grantTypeHandler.HandleAsync(new GrantTypeHandleRequest(subject, validationResult.Client, null, requestData));
+        var result = await grantTypeHandler.ExecuteAsync(new GrantTypeExecutionRequest(subject, validationResult.Client, authenticateResult.Principal, requestData));
 
         if (result.Succeeded)
         {

@@ -7,7 +7,7 @@ namespace EasyIdentity.Services;
 
 public class PasswordTokenRequestValidator : IGrantTypeTokenRequestValidator
 {
-    public string GrantType => GrantTypesConsts.Password;
+    public string GrantType => GrantTypeNameConsts.Password;
 
     private readonly IClientManager _clientManager;
 
@@ -36,10 +36,10 @@ public class PasswordTokenRequestValidator : IGrantTypeTokenRequestValidator
         if (client == null)
             return RequestValidationResult.Fail("invalid_client", "Invalid client Id.");
 
-        if (client.ClientSecretRequired && string.IsNullOrEmpty(clientSecret))
+        if (string.IsNullOrEmpty(clientSecret))
             return RequestValidationResult.Fail("invalid_request", "The client secret is required.");
 
-        if (client.ClientSecretRequired && client.ClientSecret != clientSecret)
+        if (client.ClientSecret != clientSecret)
             return RequestValidationResult.Fail("invalid_client", "Invalid client secret.");
 
         if (scope.Split(" ").Except(client.Scopes).Count() > 0)

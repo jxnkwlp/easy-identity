@@ -6,8 +6,13 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace EasyIdentity.Services;
 
-public class EmptySigningCredentialsService : ISigningCredentialsService
+public class EmptyCredentialsService : ICredentialsService
 {
+    public Task<List<EncryptingCredentials>> GetEncryptingCredentialsAsync(Client client = null, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<List<EncryptingCredentials>>(default);
+    }
+
     public Task<List<SigningCredentials>> GetSigningCredentialsAsync(Client client = null, CancellationToken cancellationToken = default)
     {
         return Task.FromResult<List<SigningCredentials>>(default);

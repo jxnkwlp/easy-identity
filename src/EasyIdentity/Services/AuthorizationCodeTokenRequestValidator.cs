@@ -7,7 +7,7 @@ namespace EasyIdentity.Services;
 
 public class AuthorizationCodeTokenRequestValidator : IGrantTypeTokenRequestValidator
 {
-    public string GrantType => GrantTypesConsts.AuthorizationCode;
+    public string GrantType => GrantTypeNameConsts.AuthorizationCode;
 
     private readonly IClientManager _clientManager;
     private readonly IRedirectUrlValidator _redirectUrlValidator;
@@ -37,7 +37,7 @@ public class AuthorizationCodeTokenRequestValidator : IGrantTypeTokenRequestVali
 
         var client = await _clientManager.FindByClientIdAsync(clientId);
 
-        if (client.ClientSecretRequired && !string.IsNullOrEmpty(client.ClientSecret))
+        if (!string.IsNullOrEmpty(client.ClientSecret))
         {
             if (string.IsNullOrEmpty(clientSecret))
                 return RequestValidationResult.Fail("invalid_request", "The client secret is required.");
@@ -62,7 +62,7 @@ public class AuthorizationCodeTokenRequestValidator : IGrantTypeTokenRequestVali
             return RequestValidationResult.Fail("invalid_request", "The redirect uri not match.");
 
         // code validation
-        var codeValidationResult = await _authorizationCodeManager.ValidationAsync(code, client, requestData);
+        var codeValidationResult = await _authorizationCodeManager.ValidationAsync( client,code, requestData);
 
         if (!codeValidationResult.Succeeded)
         {

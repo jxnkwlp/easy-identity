@@ -13,6 +13,8 @@ public class EasyIdentityAuthorizationCode
 
     public string Subject { get; set; }
 
+    public string[] Scopes { get; set; }
+
     public DateTime Expiration { get; set; }
 
     public string RedirectUrl { get; set; }

@@ -7,9 +7,9 @@ namespace EasyIdentity.Services;
 
 public interface IAuthorizationCodeFlowManager
 {
-    Task<string> GetSubjectAsync(string code, Client client, CancellationToken cancellationToken = default);
+    Task<string> CreateCodeAsync(Client client, string[] scopes, string subject, ClaimsPrincipal claimsPrincipal, RequestData requestData, CancellationToken cancellationToken = default);
 
-    Task<string> CreateCodeAsync(Client client, ClaimsPrincipal claimsPrincipal, RequestData requestData, CancellationToken cancellationToken = default);
+    Task<string> GetSubjectAsync(Client client, string[] scopes, string code, CancellationToken cancellationToken = default);
 
-    Task<AuthorizationCodeValidationResult> ValidationAsync(string code, Client client, RequestData requestData, CancellationToken cancellationToken = default);
+    Task<AuthorizationCodeValidationResult> ValidationAsync(Client client, string code, RequestData requestData, CancellationToken cancellationToken = default);
 }

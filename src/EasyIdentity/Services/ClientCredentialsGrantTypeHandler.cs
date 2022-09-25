@@ -1,11 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using EasyIdentity.Models;
 
 namespace EasyIdentity.Services;
 
 public class ClientCredentialsGrantTypeHandler : IGrantTypeHandler
 {
-    public string GrantType => GrantTypesConsts.ClientCredentials;
+    public string GrantType => GrantTypeNameConsts.ClientCredentials;
 
     private readonly ITokenManager _tokenManager;
     private readonly IClientCredentialsIdentityCreationService _clientCredentialsIdentityCreationService;
@@ -16,21 +17,15 @@ public class ClientCredentialsGrantTypeHandler : IGrantTypeHandler
         _clientCredentialsIdentityCreationService = clientCredentialsIdentityCreationService;
     }
 
-    public async Task<GrantTypeHandledResult> HandleAsync(GrantTypeHandleRequest context)
+    public async Task<GrantTypeExecutionResult> ExecuteAsync(GrantTypeExecutionRequest request, CancellationToken cancellationToken = default)
     {
-        var client = context.Client;
+        var client = request.Client;
+        var scopes = request.Data.Scopes;
 
-        var identity = await _clientCredentialsIdentityCreationService.CreateAsync(client);
+        var claimsPrincipal = await _clientCredentialsIdentityCreationService.CreateAsync(client);
 
-        var token = await _tokenManager.CreateAsync(client.ClientId, client, identity);
+        var token = await _tokenManager.CreateAsync(client, scopes, client.ClientId, claimsPrincipal, request.Data);
 
-        return GrantTypeHandledResult.Success(new TokenData
-        {
-            AccessToken = token.AccessToken,
-            RefreshToken = token.RefreshToken,
-            Scope = string.Join(" ", client.Scopes),
-            ExpiresIn = (int)token.TokenDescriptor.Lifetime.TotalSeconds,
-            TokenType = token.TokenDescriptor.TokenType,
-        });
+        return GrantTypeExecutionResult.Success(token);
     }
 }

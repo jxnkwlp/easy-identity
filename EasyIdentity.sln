@@ -30,6 +30,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeviceCodeConsoleApp", "Sam
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyIdentityServerBasic", "Samples\EasyIdentityServerBasic\EasyIdentityServerBasic.csproj", "{5CA69FBB-96A4-4CD8-87DA-5F8D0D30DF1D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleOidcClientConsoleApp", "Samples\SimpleOidcClientConsoleApp\SimpleOidcClientConsoleApp.csproj", "{A1D9C861-0BB0-479E-9342-10D6BA2A401C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -64,6 +66,10 @@ Global
 		{5CA69FBB-96A4-4CD8-87DA-5F8D0D30DF1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5CA69FBB-96A4-4CD8-87DA-5F8D0D30DF1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5CA69FBB-96A4-4CD8-87DA-5F8D0D30DF1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1D9C861-0BB0-479E-9342-10D6BA2A401C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1D9C861-0BB0-479E-9342-10D6BA2A401C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1D9C861-0BB0-479E-9342-10D6BA2A401C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1D9C861-0BB0-479E-9342-10D6BA2A401C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -78,6 +84,7 @@ Global
 		{9447AD54-A86D-4C7E-8B13-2E489D85ACBF} = {5C40A707-4974-4C79-9B6B-5AA22118EC19}
 		{55AC82A3-7E1B-472A-AC82-BF5D2E48522C} = {CFB6936B-F669-4C2E-8664-EE7F8A859F82}
 		{5CA69FBB-96A4-4CD8-87DA-5F8D0D30DF1D} = {9447AD54-A86D-4C7E-8B13-2E489D85ACBF}
+		{A1D9C861-0BB0-479E-9342-10D6BA2A401C} = {CFB6936B-F669-4C2E-8664-EE7F8A859F82}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9DF40788-007D-447A-BDCC-312FCF8857F2}

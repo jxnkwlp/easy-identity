@@ -1,4 +1,5 @@
-﻿using EasyIdentity.Endpoints;
+﻿using System;
+using EasyIdentity.Endpoints;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -6,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace EasyIdentity.Extensions;
 
 public static class ApplicationBuilderExtensions
-{
+{  
     public static IApplicationBuilder UseEasyIdentity(this IApplicationBuilder app)
     {
         var routeBuilder = new RouteBuilder(app);

@@ -17,9 +17,9 @@ public class JwksEndpointHandler : IEndpointHandler
     public string[] Methods => new string[] { HttpMethods.Get };
 
     private readonly EasyIdentityOptions _easyIdentityOptions;
-    private readonly ISigningCredentialsService _signingCredentialsStore;
+    private readonly ICredentialsService _signingCredentialsStore;
 
-    public JwksEndpointHandler(IOptions<EasyIdentityOptions> easyIdentityOptions, ISigningCredentialsService signingCredentialsStore)
+    public JwksEndpointHandler(IOptions<EasyIdentityOptions> easyIdentityOptions, ICredentialsService signingCredentialsStore)
     {
         _easyIdentityOptions = easyIdentityOptions.Value;
         _signingCredentialsStore = signingCredentialsStore;

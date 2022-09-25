@@ -41,14 +41,15 @@ public class TokenEndpointHandler : IEndpointHandler
             return;
         }
 
-        var grantTypeHandleRequest = new GrantTypeHandleRequest(null, validationResult.Client, null, requestData);
+        // TODO 
+        var grantTypeHandleRequest = new GrantTypeExecutionRequest(null, validationResult.Client, null, requestData);
 
         var grantTypeHandler = _grantTypeHandlers.FirstOrDefault(x => x.GrantType == validationResult.GrantType);
 
         if (grantTypeHandler == null)
             throw new Exception($"The grant type '{validationResult.GrantType}' is not supported");
 
-        var result = await grantTypeHandler.HandleAsync(grantTypeHandleRequest);
+        var result = await grantTypeHandler.ExecuteAsync(grantTypeHandleRequest);
 
         if (result.Succeeded)
         {

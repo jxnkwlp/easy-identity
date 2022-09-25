@@ -28,12 +28,14 @@ public class RequestData
     public string ClientSecret => this["client_secret"];
     public string Authorization => this["authorization"];
     public string Scope => this["scope"];
+    public string[] Scopes => Scope?.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
     public string Code => this["code"];
     public string RedirectUri => this["redirect_uri"];
     public string State => this["state"];
     public string Nonce => this["nonce"];
     public string Username => this["username"];
     public string Password => this["password"];
+    public string RefreshToken => this["refresh_token"];
     public string DeviceCode => this["device_code"];
     public string Tenant => this["tenant"];
     public string Prompt => this["prompt"];
@@ -49,6 +51,7 @@ public class RequestData
     ///  'response_type'
     /// </summary>
     public string ResponseType => this["response_type"];
+    public string[] ResponseTypes => ResponseType?.Split(new[] { ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
 
     /// <summary>
     ///  'response_mode'

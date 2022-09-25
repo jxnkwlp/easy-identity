@@ -23,16 +23,15 @@ identityBuilder.AddClient(new EasyIdentity.Models.Client
 {
     ClientId = "client1",
     ClientSecret = "1234567890",
-    ClientSecretRequired = true,
-    ClientName = "client1",
-    GrantTypes = GrantTypesConsts.All,
-    Scopes = new string[] { StandardScopes.Email },
+    DisplayName = "client1",
+    GrantTypes = GrantTypeNameConsts.All,
+    Scopes = new string[] { StandardScopes.OpenId, StandardScopes.OfflineAccess, StandardScopes.Email, StandardScopes.Profile },
     Enabled = true,
     RedirectUrls = new string[] { "" }
 })
 .AddStandardScopes()
-.AddDevelopmentRSASigningCredentialsStore()
-.AddUserProfileService<TestUserService>()
+.AddDevelopmentRSACredentialsStore()
+.AddUserService<TestUserService>()
 ;
 
 var app = builder.Build();

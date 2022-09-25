@@ -89,4 +89,9 @@ public class AuthorizationCodeStore : IAuthorizationCodeStore<EasyIdentityAuthor
     {
         return Task.FromResult(authorizationCode.ClientId);
     }
+
+    public Task<string[]> GetScopesAsync(EasyIdentityAuthorizationCode authorizationCode, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(authorizationCode.Scopes);
+    }
 }

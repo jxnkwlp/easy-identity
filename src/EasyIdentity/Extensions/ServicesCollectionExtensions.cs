@@ -52,9 +52,12 @@ public static class ServicesCollectionExtensions
         services.AddScoped<ITokenRequestValidator, TokenRequestValidator>();
         services.AddScoped<IResponseWriter, ResponseWriter>();
 
+
+        services.AddScoped<IClientAuthenticationService, ClientAuthenticationService>();
+
         // Token
-        services.AddScoped<ITokenManager, TokenManager>();
         services.AddScoped<ITokenCreationService, JwtTokenCreationService>();
+        services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
         // common service
         services.AddScoped<IRedirectUrlValidator, RedirectUrlValidator>();
@@ -93,12 +96,19 @@ public static class ServicesCollectionExtensions
         // store
         builder.AddDeviceCodeService<EasyIdentityDeviceCode, DeviceCodeStore>();
 
-        // Store
+        //  
         services.AddScoped<IScopeManager, ScopeManager>();
+        services.AddScoped<IScopeStore, MemoryScopeStore>();
+        //
         services.AddScoped<IClientManager, ClientManager>();
         services.AddSingleton<IClientStore, MemoryClientStore>();
-        services.AddScoped<ISigningCredentialsService, EmptySigningCredentialsService>();
+        // 
+        services.AddScoped<ICredentialsService, EmptyCredentialsService>();
 
+        // token 
+        builder.AddTokenService<EasyIdentityToken, TokenStore>();
+
+        // 
         services.AddSingleton((_) => builder);
 
         return builder;

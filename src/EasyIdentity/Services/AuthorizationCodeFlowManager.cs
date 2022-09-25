@@ -27,16 +27,16 @@ public class AuthorizationCodeFlowManager<TAuthorizationCode> : IAuthorizationCo
         _authorizationCodeStoreService = authorizationCodeStoreService;
     }
 
-    public async Task<string> CreateCodeAsync(Client client, ClaimsPrincipal claimsPrincipal, RequestData requestData, CancellationToken cancellationToken = default)
+    public async Task<string> CreateCodeAsync(Client client, string[] scopes, string shubject, ClaimsPrincipal claimsPrincipal, RequestData requestData, CancellationToken cancellationToken = default)
     {
-        var code = await _authorizationCodeCreationService.CreateAsync(client, claimsPrincipal);
+        var code = await _authorizationCodeCreationService.CreateAsync(client, scopes, shubject, claimsPrincipal);
 
         await _authorizationCodeStoreService.CreateAsync(code, client.ClientId, claimsPrincipal, DateTime.UtcNow.Add(_options.DefaultAuthorizationCodeLifetime), requestData);
 
         return code;
     }
 
-    public async Task<string> GetSubjectAsync(string code, Client client, CancellationToken cancellationToken = default)
+    public async Task<string> GetSubjectAsync(Client client, string[] scopes, string code, CancellationToken cancellationToken = default)
     {
         var authorizationCode = await _authorizationCodeStoreService.FindAsync(code, cancellationToken);
         if (authorizationCode == null)
@@ -45,7 +45,7 @@ public class AuthorizationCodeFlowManager<TAuthorizationCode> : IAuthorizationCo
         return await _authorizationCodeStoreService.GetSubjectAsync(authorizationCode, cancellationToken);
     }
 
-    public async Task<AuthorizationCodeValidationResult> ValidationAsync(string code, Client client, RequestData requestData, CancellationToken cancellationToken = default)
+    public async Task<AuthorizationCodeValidationResult> ValidationAsync(Client client, string code, RequestData requestData, CancellationToken cancellationToken = default)
     {
         var authorizationCode = await _authorizationCodeStoreService.FindAsync(code, cancellationToken);
 
@@ -68,7 +68,9 @@ public class AuthorizationCodeFlowManager<TAuthorizationCode> : IAuthorizationCo
                     return AuthorizationCodeValidationResult.Fail(new Exception("Invalid code."));
             }
             else if (codeChallenge != requestData.CodeVerifier)
+            {
                 return AuthorizationCodeValidationResult.Fail(new Exception("Invalid code."));
+            }
         }
 
         return AuthorizationCodeValidationResult.Success();

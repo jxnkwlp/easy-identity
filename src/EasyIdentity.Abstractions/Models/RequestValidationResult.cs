@@ -32,6 +32,12 @@ public class RequestValidationResult
 
     public static RequestValidationResult Success(Client client, RequestData requestData, string grantType = null)
     {
-        return new RequestValidationResult { GrantType = grantType, Client = client, Data = requestData };
+        return new RequestValidationResult
+        {
+            GrantType = grantType,
+            Client = client,
+            // ClientRequestDescriptor = new ClientRequestDescriptor(requestData.ClientId, requestData.GrantType, requestData.Scopes, client),
+            Data = requestData
+        };
     }
 }

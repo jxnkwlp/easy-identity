@@ -54,6 +54,8 @@ public class RequestParamReader : IRequestParamReader
 
         var authorization = request.Headers["Authorization"].ToString();
 
+        // request.Headers.Authorization.ToArray();
+
         if (!string.IsNullOrEmpty(authorization) && authorization.StartsWith("basic", StringComparison.InvariantCultureIgnoreCase))
         {
             if (TryDecodeBase64String(authorization.Substring(5).Trim(), out var value))
