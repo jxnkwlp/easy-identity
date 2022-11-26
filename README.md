@@ -2,6 +2,7 @@
 
 OpenID Connect and OAuth 2.0 implement framework for asp.net core.
 
+> The project is currently under development, if you have any ideas, please create issue
 
 ## Getting started
 
